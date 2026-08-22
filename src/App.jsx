@@ -1,9 +1,10 @@
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import heroVideo from "./videos/zultanite.mp4";
+import React, { useState, createContext, useContext, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
-
+import AdminLogin from "./AdminLogin";
+import AdminDashboard from "./AdminDashboard";
+import Account from "./Account";
 // Görsel Importları
-import headerImage from './header.jpg';
-import kadin from './kadin.jpg'; 
 import zultanitering from './zultanitering.jpg'; 
 import zultanitebracelet from './zultanitebracelet.jpg'; 
 import necklace from './necklace.jpg'; 
@@ -17,19 +18,56 @@ import Watches from './Watches';
 import Bags from './Bags';
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [pathname, search]);
+
   return null;
 };
 
 export const LanguageContext = createContext();
 
+const SUPPORTED_LANGUAGES = ['EN', 'TR', 'ZH', 'ES'];
+
+const getInitialLanguage = () => {
+  if (typeof window === 'undefined') return 'TR';
+
+  try {
+    const savedLanguage = String(
+      window.localStorage.getItem('language') || ''
+    ).toUpperCase();
+
+    return SUPPORTED_LANGUAGES.includes(savedLanguage)
+      ? savedLanguage
+      : 'TR';
+  } catch {
+    return 'TR';
+  }
+};
+
 const translations = {
   EN: {
     findStore: "Find a Store", services: "Services", cart: "Shopping Bag", account: "My Account",
     search: "Search", searchPlaceholder: "Search...", results: "Results", noResults: "No products found.",
-    telkari: "Filigree", jewellery: "Jewellery", home: "Home", watches: "Watches",
-    bagsAccessories: "Bags & Accessories", discoverCappadocia: "Discover the Cappadocia Series",
+    telkari: "Create Your Own", jewellery: "Zultanite", jewelleryMenu: "Jewellery", earringsMenu: "Earrings", necklacesMenu: "Necklaces", ringsMenu: "Rings", charmsMenu: "Charms", braceletsMenu: "Bracelets", allJewelleryMenu: "All Jewellery", gold: "Gold", home: "Home", watches: "Watches",
+    bagsAccessories: "Bags & Accessories", naturalStones: "Natural Stones", cappadociaSeries: "Cappadocia Series", balloon: "Balloon", evilEye: "Turkish Eye", discoverCappadocia: "Discover the Cappadocia Series",
     rings: "Rings", bracelets: "Bracelets", necklaces: "Necklaces",
     allJewellery: "All Jewellery", collections: "Collections", newArrivals: "New Arrivals", explore: "EXPLORE",
     telkariHistory: "History of Filigree", masters: "Master Craftsmen", silver: "Silver Collection",
@@ -43,8 +81,8 @@ const translations = {
   TR: {
     findStore: "Mağaza Bul", services: "Hizmetler", cart: "Sepetim", account: "Hesabım",
     search: "Arama", searchPlaceholder: "Ara...", results: "Sonuçlar", noResults: "Ürün bulunamadı.",
-    telkari: "Telkari", jewellery: "Mücevherat", home: "Anasayfa", watches: "Saatler",
-    bagsAccessories: "Çantalar & Aksesuarlar", discoverCappadocia: "Kapadokya Serisini Keşfedin",
+    telkari: "Kendin Yap", jewellery: "Zultanite", jewelleryMenu: "Takılar", earringsMenu: "Küpeler", necklacesMenu: "Kolyeler", ringsMenu: "Yüzükler", charmsMenu: "Charmlar", braceletsMenu: "Bileklikler", allJewelleryMenu: "Tüm Takılar", gold: "Altın", home: "Anasayfa", watches: "Saatler",
+    bagsAccessories: "Çantalar & Aksesuarlar", naturalStones: "Doğal Taşlar", cappadociaSeries: "Kapadokya Serisi", balloon: "Balon", evilEye: "Nazar", discoverCappadocia: "Kapadokya Serisini Keşfedin",
     rings: "Yüzükler", bracelets: "Bilezikler", necklaces: "Kolyeler",
     allJewellery: "Tüm Mücevherat", collections: "Koleksiyonlar", newArrivals: "Yeni Gelenler", explore: "KEŞFET",
     telkariHistory: "Telkari Sanatı Tarihi", masters: "Usta Ellerin Hikayesi", silver: "Gümüş Koleksiyonu",
@@ -58,8 +96,8 @@ const translations = {
   ZH: {
     findStore: "查找店铺", services: "服务", cart: "购物篮", account: "我的账户",
     search: "搜索", searchPlaceholder: "搜索...", results: "结果", noResults: "未找到产品",
-    telkari: "花丝镶嵌", jewellery: "珠宝", home: "首页", watches: "腕表",
-    bagsAccessories: "皮具与配件", discoverCappadocia: "探索卡帕多奇亚系列",
+    telkari: "自定义设计", jewellery: "苏丹石", jewelleryMenu: "珠宝", earringsMenu: "耳环", necklacesMenu: "项链", ringsMenu: "戒指", charmsMenu: "吊饰", braceletsMenu: "手链", allJewelleryMenu: "全部珠宝", gold: "黄金", home: "首页", watches: "腕表",
+    bagsAccessories: "皮具与配件", naturalStones: "天然宝石", cappadociaSeries: "卡帕多奇亚系列", balloon: "热气球", evilEye: "纳扎尔之眼", discoverCappadocia: "探索卡帕多奇亚系列",
     rings: "戒指", bracelets: "手镯", necklaces: "项链",
     allJewellery: "所有珠宝", collections: "系列", newArrivals: "新品上市", explore: "探索",
     telkariHistory: "花丝镶嵌历史", masters: "大师工匠", silver: "纯银系列",
@@ -69,17 +107,125 @@ const translations = {
     yourBag: "购物篮", emptyBag: "您的购物篮是空的", total: "总计", checkout: "去结账",
     remove: "移除", continueShopping: "继续购物", addedMsg: "已加入购物篮",
     payNow: "完成支付", successMsg: "支付成功"
+  },
+  ES: {
+    findStore: "Buscar una tienda", services: "Servicios", cart: "Bolsa de compra", account: "Mi cuenta",
+    search: "Buscar", searchPlaceholder: "Buscar...", results: "Resultados", noResults: "No se encontraron productos.",
+    telkari: "Crea tu joya", jewellery: "Zultanita", jewelleryMenu: "Joyería", earringsMenu: "Pendientes", necklacesMenu: "Collares", ringsMenu: "Anillos", charmsMenu: "Dijes", braceletsMenu: "Pulseras", allJewelleryMenu: "Toda la joyería", gold: "Oro", home: "Inicio", watches: "Relojes",
+    bagsAccessories: "Bolsos y accesorios", naturalStones: "Piedras naturales", cappadociaSeries: "Serie Capadocia", balloon: "Globo", evilEye: "Ojo turco", discoverCappadocia: "Descubre la colección Capadocia",
+    rings: "Anillos", bracelets: "Pulseras", necklaces: "Collares",
+    allJewellery: "Toda la joyería", collections: "Colecciones", newArrivals: "Novedades", explore: "EXPLORAR",
+    telkariHistory: "Historia de la filigrana", masters: "Maestros artesanos", silver: "Colección de plata",
+    watchCollections: "Colecciones de relojes", swissMade: "Hecho en Suiza", automatic: "Automático",
+    leatherBags: "Bolsos de cuero", scarves: "Pañuelos de seda", smallLeather: "Pequeños artículos de cuero", accessoriesTitle: "Accesorios",
+    contactUs: "Contacto", followUs: "SÍGUENOS", customerCare: "ATENCIÓN AL CLIENTE",
+    yourBag: "TU BOLSA DE COMPRA", emptyBag: "TU BOLSA ESTÁ VACÍA.", total: "TOTAL", checkout: "CONTINUAR AL PAGO",
+    remove: "ELIMINAR", continueShopping: "SEGUIR COMPRANDO", addedMsg: "AÑADIDO A LA BOLSA",
+    payNow: "COMPLETAR EL PAGO", successMsg: "¡Pago realizado correctamente!"
   }
 };  
 
+const jewellerySubmenuCopy = {
+  TR: {
+    zultaniteNecklaces: "Zultanite Kolyeler", paraibaNecklaces: "Turmalin Paraiba Kolyeler", citrineNecklaces: "Sitrin Kolyeler", moissaniteNecklaces: "Mozanit Kolyeler", minimalNecklaces: "Minimal Kolyeler", statementNecklaces: "Gösterişli Kolyeler",
+    zultaniteEarrings: "Zultanite Küpeler", paraibaEarrings: "Turmalin Paraiba Küpeler", citrineEarrings: "Sitrin Küpeler", moissaniteEarrings: "Mozanit Küpeler", dropEarrings: "Damla Küpeler", hoopEarrings: "Halka Küpeler",
+    zultaniteRings: "Zultanite Yüzükler", paraibaRings: "Turmalin Paraiba Yüzükler", citrineRings: "Sitrin Yüzükler", moissaniteRings: "Mozanit Yüzükler", solitaireRings: "Tektaş Yüzükler", cocktailRings: "Kokteyl Yüzükler",
+    zultaniteBracelets: "Zultanite Bileklikler", chainBracelets: "Zincir Bileklikler", gemstoneBracelets: "Taşlı Bileklikler",
+    necklaceCharms: "Kolye Charmları", braceletCharms: "Bileklik Charmları", charms: "Charmlar", collectionTitle: "ZULTANITE KOLEKSİYONU"
+  },
+  EN: {
+    zultaniteNecklaces: "Zultanite Necklaces", paraibaNecklaces: "Paraiba Tourmaline Necklaces", citrineNecklaces: "Citrine Necklaces", moissaniteNecklaces: "Moissanite Necklaces", minimalNecklaces: "Minimal Necklaces", statementNecklaces: "Statement Necklaces",
+    zultaniteEarrings: "Zultanite Earrings", paraibaEarrings: "Paraiba Tourmaline Earrings", citrineEarrings: "Citrine Earrings", moissaniteEarrings: "Moissanite Earrings", dropEarrings: "Drop Earrings", hoopEarrings: "Hoop Earrings",
+    zultaniteRings: "Zultanite Rings", paraibaRings: "Paraiba Tourmaline Rings", citrineRings: "Citrine Rings", moissaniteRings: "Moissanite Rings", solitaireRings: "Solitaire Rings", cocktailRings: "Cocktail Rings",
+    zultaniteBracelets: "Zultanite Bracelets", chainBracelets: "Chain Bracelets", gemstoneBracelets: "Gemstone Bracelets",
+    necklaceCharms: "Necklace Charms", braceletCharms: "Bracelet Charms", charms: "Charms", collectionTitle: "ZULTANITE COLLECTION"
+  },
+  ZH: {
+    zultaniteNecklaces: "苏丹石项链", paraibaNecklaces: "帕拉伊巴碧玺项链", citrineNecklaces: "黄水晶项链", moissaniteNecklaces: "莫桑石项链", minimalNecklaces: "简约项链", statementNecklaces: "个性项链",
+    zultaniteEarrings: "苏丹石耳环", paraibaEarrings: "帕拉伊巴碧玺耳环", citrineEarrings: "黄水晶耳环", moissaniteEarrings: "莫桑石耳环", dropEarrings: "水滴耳环", hoopEarrings: "圈形耳环",
+    zultaniteRings: "苏丹石戒指", paraibaRings: "帕拉伊巴碧玺戒指", citrineRings: "黄水晶戒指", moissaniteRings: "莫桑石戒指", solitaireRings: "单石戒指", cocktailRings: "鸡尾酒戒指",
+    zultaniteBracelets: "苏丹石手链", chainBracelets: "链式手链", gemstoneBracelets: "宝石手链",
+    necklaceCharms: "项链吊饰", braceletCharms: "手链吊饰", charms: "吊饰", collectionTitle: "苏丹石系列"
+  },
+  ES: {
+    zultaniteNecklaces: "Collares de Zultanita", paraibaNecklaces: "Collares de turmalina Paraíba", citrineNecklaces: "Collares de citrino", moissaniteNecklaces: "Collares de moissanita", minimalNecklaces: "Collares minimalistas", statementNecklaces: "Collares llamativos",
+    zultaniteEarrings: "Pendientes de Zultanita", paraibaEarrings: "Pendientes de turmalina Paraíba", citrineEarrings: "Pendientes de citrino", moissaniteEarrings: "Pendientes de moissanita", dropEarrings: "Pendientes de lágrima", hoopEarrings: "Pendientes de aro",
+    zultaniteRings: "Anillos de Zultanita", paraibaRings: "Anillos de turmalina Paraíba", citrineRings: "Anillos de citrino", moissaniteRings: "Anillos de moissanita", solitaireRings: "Anillos solitarios", cocktailRings: "Anillos de cóctel",
+    zultaniteBracelets: "Pulseras de Zultanita", chainBracelets: "Pulseras de cadena", gemstoneBracelets: "Pulseras con gemas",
+    necklaceCharms: "Dijes para collares", braceletCharms: "Dijes para pulseras", charms: "Dijes", collectionTitle: "COLECCIÓN ZULTANITA"
+  }
+};
+
+const naturalStoneMenuCopy = {
+  TR: [
+    { slug: "aquamarine", label: "Akuamarin Taşı" },
+    { slug: "zultanite", label: "Diaspor (Zultanite)" },
+    { slug: "diamond", label: "Elmas" },
+    { slug: "opal", label: "Opal" },
+    { slug: "sapphire", label: "Safir" },
+    { slug: "citrine", label: "Sitrin" },
+    { slug: "tanzanite", label: "Tanzanit" },
+    { slug: "topaz", label: "Topaz" },
+    { slug: "tourmaline", label: "Turmalin" },
+    { slug: "ruby", label: "Yakut" },
+    { slug: "zircon", label: "Zirkon" },
+    { slug: "emerald", label: "Zümrüt" },
+  ],
+  EN: [
+    { slug: "aquamarine", label: "Aquamarine" },
+    { slug: "zultanite", label: "Diaspore (Zultanite)" },
+    { slug: "diamond", label: "Diamond" },
+    { slug: "opal", label: "Opal" },
+    { slug: "sapphire", label: "Sapphire" },
+    { slug: "citrine", label: "Citrine" },
+    { slug: "tanzanite", label: "Tanzanite" },
+    { slug: "topaz", label: "Topaz" },
+    { slug: "tourmaline", label: "Tourmaline" },
+    { slug: "ruby", label: "Ruby" },
+    { slug: "zircon", label: "Zircon" },
+    { slug: "emerald", label: "Emerald" },
+  ],
+  ZH: [
+    { slug: "aquamarine", label: "海蓝宝石" },
+    { slug: "zultanite", label: "硬水铝石（苏丹石）" },
+    { slug: "diamond", label: "钻石" },
+    { slug: "opal", label: "欧泊" },
+    { slug: "sapphire", label: "蓝宝石" },
+    { slug: "citrine", label: "黄水晶" },
+    { slug: "tanzanite", label: "坦桑石" },
+    { slug: "topaz", label: "托帕石" },
+    { slug: "tourmaline", label: "碧玺" },
+    { slug: "ruby", label: "红宝石" },
+    { slug: "zircon", label: "锆石" },
+    { slug: "emerald", label: "祖母绿" },
+  ],
+  ES: [
+    { slug: "aquamarine", label: "Aguamarina" },
+    { slug: "zultanite", label: "Diásporo (Zultanita)" },
+    { slug: "diamond", label: "Diamante" },
+    { slug: "opal", label: "Ópalo" },
+    { slug: "sapphire", label: "Zafiro" },
+    { slug: "citrine", label: "Citrino" },
+    { slug: "tanzanite", label: "Tanzanita" },
+    { slug: "topaz", label: "Topacio" },
+    { slug: "tourmaline", label: "Turmalina" },
+    { slug: "ruby", label: "Rubí" },
+    { slug: "zircon", label: "Circón" },
+    { slug: "emerald", label: "Esmeralda" },
+  ],
+};
+
 // SEPET SAYFASI BİLEŞENİ
 const Cart = () => {
-  const { t, cart, removeFromCart, setCart } = useContext(LanguageContext);
+  const { t, cart, removeFromCart, setCart, formatPrice } = useContext(LanguageContext);
   const [showCheckout, setShowCheckout] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   
-  const totalPrice = cart.reduce((acc, item) => acc + parseFloat(item.price || 0), 0).toFixed(2);
+  const totalPrice = cart.reduce(
+    (acc, item) => acc + Number(item.price || 0),
+    0
+  );
 
   const handlePayment = (e) => {
     e.preventDefault();
@@ -112,7 +258,7 @@ const Cart = () => {
                     <div className="cart-item-details">
                       <div className="details-header">
                         <h3>{item.name || item.title}</h3>
-                        <p className="item-price">{item.price} TL</p>
+                        <p className="item-price">{formatPrice(item.price)}</p>
                       </div>
                       <button className="cart-remove-btn" onClick={() => removeFromCart(index)}>
                         {t.remove}
@@ -138,7 +284,7 @@ const Cart = () => {
               <div className="summary-sticky">
                 <div className="summary-row">
                   <span>{t.total}</span>
-                  <span className="total-amount">{totalPrice} TL</span>
+                  <span className="total-amount">{formatPrice(totalPrice)}</span>
                 </div>
                 {!showCheckout ? (
                   <button className="checkout-cta" onClick={() => setShowCheckout(true)}>{t.checkout}</button>
@@ -218,7 +364,6 @@ const SearchResults = () => {
 
 const Home = () => {
   const { t } = useContext(LanguageContext);
-  const [isBannerHovered, setIsBannerHovered] = useState(false);
 
   const collectionItems = [
     { id: 1, title: t.rings, img: zultanitering },
@@ -231,21 +376,400 @@ const Home = () => {
 
   return (
     <div className="home-content">
-      <div onMouseEnter={() => setIsBannerHovered(true)} onMouseLeave={() => setIsBannerHovered(false)} className="banner-container">
-        <img src={kadin} alt="Banner" className={`banner-img ${isBannerHovered ? 'hidden' : ''}`} />
-        <img src={headerImage} alt="Hover" className={`banner-img ${isBannerHovered ? '' : 'hidden'}`} />
-      </div>
-      <div className="section-title">
-        <h2>{t.discoverCappadocia}</h2>
-        <div className="title-line"></div>
-      </div>
-      <div className="product-grid">
-        {collectionItems.map((item) => (
-          <div key={item.id} className="product-card">
-            <div className="img-wrapper"><img src={item.img} alt={item.title} /></div>
-            <div className="product-info"><span>{item.title}</span></div>
+      <div className="banner-container">
+        <video
+          className="banner-video"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        >
+          <source
+            src={heroVideo}
+            type="video/mp4"
+          />
+        </video>
+</div>
+      <section className="home-collections">
+        <div className="home-collections-heading">
+          <span className="home-collections-kicker">KIBELE • CAPPADOCIA</span>
+          <h2>{t.discoverCappadocia}</h2>
+          <div className="home-collections-line"></div>
+        </div>
+
+        <div className="home-collections-grid">
+          {collectionItems.map((item, index) => (
+            <article key={item.id} className="home-collection-card">
+              <div className="home-collection-image-wrap">
+                <img src={item.img} alt={item.title} />
+                <div className="home-collection-overlay"></div>
+                <span className="home-collection-number">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+
+                <div className="home-collection-content">
+                  <h3>{item.title}</h3>
+                  <span className="home-collection-link">{t.explore}</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+
+
+const CreateYourOwn = () => {
+  const { lang } = useContext(LanguageContext);
+  const [productType, setProductType] = useState("ring");
+  const [metal, setMetal] = useState("silver");
+  const [stone, setStone] = useState("zultanite");
+  const [shape, setShape] = useState("round");
+  const [engraving, setEngraving] = useState("");
+
+  const copy = {
+    TR: {
+      kicker: "KIBELE • ATÖLYE",
+      title: "KENDİN YAP",
+      intro: "Kendi takını tasarla. Ürün türünü, metali, taşı ve kesimi seç; tasarımını Kibele atölyesine gönder.",
+      product: "ÜRÜN",
+      metal: "METAL",
+      stone: "TAŞ",
+      shape: "KESİM",
+      engraving: "KİŞİSELLEŞTİRME",
+      engravingPlaceholder: "İsim, tarih veya kısa not",
+      ring: "Yüzük",
+      necklace: "Kolye",
+      bracelet: "Bileklik",
+      earring: "Küpe",
+      silver: "925 Gümüş",
+      gold: "14K Altın",
+      whiteGold: "Beyaz Altın",
+      zultanite: "Zultanite",
+      aquamarine: "Aquamarine",
+      paraiba: "Paraiba",
+      quartz: "Pink Quartz",
+      round: "Yuvarlak",
+      oval: "Oval",
+      pear: "Damla",
+      emerald: "Emerald",
+      preview: "TASARIMIN",
+      summary: "SEÇİMLERİN",
+      send: "TASARIMI WHATSAPP'TAN GÖNDER",
+      note: "Bu alan ön tasarım içindir. Son ölçü, taş uygunluğu, fiyat ve üretim detayları atölye tarafından onaylanır."
+    },
+    EN: {
+      kicker: "KIBELE • ATELIER",
+      title: "CREATE YOUR OWN",
+      intro: "Design your own jewellery. Choose the piece, metal, gemstone and cut, then send your design to the Kibele atelier.",
+      product: "PIECE",
+      metal: "METAL",
+      stone: "GEMSTONE",
+      shape: "CUT",
+      engraving: "PERSONALISATION",
+      engravingPlaceholder: "Name, date or a short note",
+      ring: "Ring",
+      necklace: "Necklace",
+      bracelet: "Bracelet",
+      earring: "Earrings",
+      silver: "925 Silver",
+      gold: "14K Gold",
+      whiteGold: "White Gold",
+      zultanite: "Zultanite",
+      aquamarine: "Aquamarine",
+      paraiba: "Paraiba",
+      quartz: "Pink Quartz",
+      round: "Round",
+      oval: "Oval",
+      pear: "Pear",
+      emerald: "Emerald",
+      preview: "YOUR DESIGN",
+      summary: "YOUR SELECTION",
+      send: "SEND DESIGN VIA WHATSAPP",
+      note: "This is a preliminary design tool. Final sizing, gemstone availability, price and production details are confirmed by the atelier."
+    },
+    ZH: {
+      kicker: "KIBELE • 工坊",
+      title: "自定义设计",
+      intro: "设计属于您的珠宝。选择款式、金属、宝石和切割方式，然后将设计发送给 Kibele 工坊。",
+      product: "款式",
+      metal: "金属",
+      stone: "宝石",
+      shape: "切割",
+      engraving: "个性化",
+      engravingPlaceholder: "姓名、日期或简短文字",
+      ring: "戒指",
+      necklace: "项链",
+      bracelet: "手链",
+      earring: "耳环",
+      silver: "925 银",
+      gold: "14K 黄金",
+      whiteGold: "白金",
+      zultanite: "苏丹石",
+      aquamarine: "海蓝宝石",
+      paraiba: "帕拉伊巴",
+      quartz: "粉晶",
+      round: "圆形",
+      oval: "椭圆形",
+      pear: "水滴形",
+      emerald: "祖母绿形",
+      preview: "您的设计",
+      summary: "您的选择",
+      send: "通过 WHATSAPP 发送设计",
+      note: "此工具用于初步设计。最终尺寸、宝石库存、价格及制作细节由工坊确认。"
+    },
+    ES: {
+      kicker: "KIBELE • ATELIER",
+      title: "CREA TU JOYA",
+      intro: "Diseña tu propia joya. Elige la pieza, el metal, la gema y el corte, y envía tu diseño al atelier de Kibele.",
+      product: "PIEZA",
+      metal: "METAL",
+      stone: "GEMA",
+      shape: "CORTE",
+      engraving: "PERSONALIZACIÓN",
+      engravingPlaceholder: "Nombre, fecha o una nota breve",
+      ring: "Anillo",
+      necklace: "Collar",
+      bracelet: "Pulsera",
+      earring: "Pendientes",
+      silver: "Plata 925",
+      gold: "Oro de 14K",
+      whiteGold: "Oro blanco",
+      zultanite: "Zultanita",
+      aquamarine: "Aguamarina",
+      paraiba: "Paraíba",
+      quartz: "Cuarzo rosa",
+      round: "Redondo",
+      oval: "Ovalado",
+      pear: "Pera",
+      emerald: "Esmeralda",
+      preview: "TU DISEÑO",
+      summary: "TU SELECCIÓN",
+      send: "ENVIAR EL DISEÑO POR WHATSAPP",
+      note: "Esta herramienta sirve como diseño preliminar. El atelier confirmará las medidas finales, la disponibilidad de gemas, el precio y los detalles de producción."
+    }
+  };
+
+  const c = copy[lang] || copy.EN;
+
+  const productOptions = [
+    { value: "ring", label: c.ring },
+    { value: "necklace", label: c.necklace },
+    { value: "bracelet", label: c.bracelet },
+    { value: "earring", label: c.earring }
+  ];
+
+  const metalOptions = [
+    { value: "silver", label: c.silver },
+    { value: "gold", label: c.gold },
+    { value: "whiteGold", label: c.whiteGold }
+  ];
+
+  const stoneOptions = [
+    { value: "zultanite", label: c.zultanite },
+    { value: "aquamarine", label: c.aquamarine },
+    { value: "paraiba", label: c.paraiba },
+    { value: "quartz", label: c.quartz }
+  ];
+
+  const shapeOptions = [
+    { value: "round", label: c.round },
+    { value: "oval", label: c.oval },
+    { value: "pear", label: c.pear },
+    { value: "emerald", label: c.emerald }
+  ];
+
+  const labelOf = (items, key) => items.find((item) => item.value === key)?.label || key;
+
+  const whatsappText = encodeURIComponent(
+    `${c.title}\n${c.product}: ${labelOf(productOptions, productType)}\n${c.metal}: ${labelOf(metalOptions, metal)}\n${c.stone}: ${labelOf(stoneOptions, stone)}\n${c.shape}: ${labelOf(shapeOptions, shape)}${engraving ? `\n${c.engraving}: ${engraving}` : ""}`
+  );
+
+  const stoneSymbol = shape === "round" ? "●" : shape === "oval" ? "⬭" : shape === "pear" ? "♦" : "◆";
+
+  return (
+    <div className="custom-design-page">
+      <section className="custom-design-intro">
+        <span>{c.kicker}</span>
+        <h1>{c.title}</h1>
+        <div className="custom-design-line"></div>
+        <p>{c.intro}</p>
+      </section>
+
+      <section className="custom-design-studio">
+        <div className="custom-design-controls">
+          <div className="custom-option-group">
+            <div className="custom-group-heading">
+              <h3>{c.product}</h3>
+              <span>{labelOf(productOptions, productType)}</span>
+            </div>
+            <div className="custom-option-grid custom-product-options">
+              {productOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`custom-visual-option ${productType === item.value ? "selected" : ""}`}
+                  onClick={() => setProductType(item.value)}
+                  aria-pressed={productType === item.value}
+                >
+                  <span className={`product-choice-icon product-choice-${item.value}`} aria-hidden="true">
+                    <span></span>
+                  </span>
+                  <span className="custom-option-label">{item.label}</span>
+                  <span className="custom-selected-check">✓</span>
+                </button>
+              ))}
+            </div>
           </div>
-        ))}
+
+          <div className="custom-option-group">
+            <div className="custom-group-heading">
+              <h3>{c.metal}</h3>
+              <span>{labelOf(metalOptions, metal)}</span>
+            </div>
+            <div className="custom-option-grid custom-metal-options">
+              {metalOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`custom-visual-option ${metal === item.value ? "selected" : ""}`}
+                  onClick={() => setMetal(item.value)}
+                  aria-pressed={metal === item.value}
+                >
+                  <span className={`metal-choice-swatch metal-choice-${item.value}`} aria-hidden="true"></span>
+                  <span className="custom-option-label">{item.label}</span>
+                  <span className="custom-selected-check">✓</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="custom-option-group">
+            <div className="custom-group-heading">
+              <h3>{c.stone}</h3>
+              <span>{labelOf(stoneOptions, stone)}</span>
+            </div>
+            <div className="custom-option-grid custom-stone-options">
+              {stoneOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`custom-visual-option ${stone === item.value ? "selected" : ""}`}
+                  onClick={() => setStone(item.value)}
+                  aria-pressed={stone === item.value}
+                >
+                  <span className={`stone-choice-gem stone-choice-${item.value}`} aria-hidden="true"></span>
+                  <span className="custom-option-label">{item.label}</span>
+                  <span className="custom-selected-check">✓</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="custom-option-group">
+            <div className="custom-group-heading">
+              <h3>{c.shape}</h3>
+              <span>{labelOf(shapeOptions, shape)}</span>
+            </div>
+            <div className="custom-option-grid custom-shape-options">
+              {shapeOptions.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`custom-visual-option ${shape === item.value ? "selected" : ""}`}
+                  onClick={() => setShape(item.value)}
+                  aria-pressed={shape === item.value}
+                >
+                  <span className={`shape-choice-icon shape-choice-${item.value}`} aria-hidden="true"></span>
+                  <span className="custom-option-label">{item.label}</span>
+                  <span className="custom-selected-check">✓</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="custom-option-group">
+            <h3>{c.engraving}</h3>
+            <input
+              className="custom-engraving-input"
+              type="text"
+              maxLength="40"
+              value={engraving}
+              onChange={(e) => setEngraving(e.target.value)}
+              placeholder={c.engravingPlaceholder}
+            />
+          </div>
+        </div>
+
+        <div className="custom-design-preview-column">
+          <div className={`custom-design-preview metal-${metal} stone-${stone} cut-${shape}`}>
+            <div className="custom-preview-topbar">
+              <span className="custom-preview-label">{c.preview}</span>
+              <div className="custom-preview-chips">
+                <span className={`preview-metal-dot metal-choice-${metal}`}></span>
+                <span>{labelOf(metalOptions, metal)}</span>
+                <span className={`preview-stone-dot stone-choice-${stone}`}></span>
+                <span>{labelOf(stoneOptions, stone)}</span>
+              </div>
+            </div>
+            <div className={`custom-jewel custom-${productType}`}>
+              <span className={`custom-stone shape-${shape}`}>{stoneSymbol}</span>
+            </div>
+            <div className="custom-preview-cut">{labelOf(shapeOptions, shape)}</div>
+            {engraving && <span className="custom-engraving-preview">{engraving}</span>}
+          </div>
+
+          <div className="custom-design-summary">
+            <span className="custom-summary-title">{c.summary}</span>
+            <p>{labelOf(productOptions, productType)} • {labelOf(metalOptions, metal)}</p>
+            <p>{labelOf(stoneOptions, stone)} • {labelOf(shapeOptions, shape)}</p>
+            {engraving && <p>“{engraving}”</p>}
+            <a
+              className="custom-send-button"
+              href={`https://wa.me/905050349650?text=${whatsappText}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {c.send}
+            </a>
+            <small>{c.note}</small>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+const Gold = () => {
+  const { t } = useContext(LanguageContext);
+
+  return (
+    <div className="gold-page">
+      <div className="gold-hero">
+        <span className="gold-kicker">KIBELE • CAPPADOCIA</span>
+        <h1>{t.gold}</h1>
+        <div className="gold-line"></div>
+        <p className="gold-subtitle">
+          {t.gold === "Altın"
+            ? "Zarif tasarımlar ve zamansız detaylarla seçkin altın koleksiyonu."
+            : t.gold === "黄金"
+            ? "精选黄金系列，以优雅设计与永恒细节呈现。"
+            : "A refined gold collection defined by elegant design and timeless detail."}
+        </p>
+      </div>
+
+      <div className="gold-coming-soon">
+        <span>
+          {t.gold === "Altın"
+            ? "ALTIN KOLEKSİYONU YAKINDA"
+            : t.gold === "黄金"
+            ? "黄金系列即将推出"
+            : "GOLD COLLECTION COMING SOON"}
+        </span>
       </div>
     </div>
   );
@@ -299,7 +823,51 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
   const [query, setQuery] = useState("");
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [jewelleryMenuOpen, setJewelleryMenuOpen] = useState(false);
+  const [naturalStonesMenuOpen, setNaturalStonesMenuOpen] = useState(false);
+  const [cappadociaMenuOpen, setCappadociaMenuOpen] = useState(false);
+  const menuText = jewellerySubmenuCopy[lang] || jewellerySubmenuCopy.EN;
+  const naturalStoneItems =
+    naturalStoneMenuCopy[lang] || naturalStoneMenuCopy.TR;
+  const extraMenuText = {
+    TR: {
+      naturalStones: "Doğal Taşlar",
+      allNaturalStones: "Tüm Doğal Taşları Gör",
+      cappadociaSeries: "Kapadokya Serisi",
+      balloon: "Balon",
+      evilEye: "Nazar",
+    },
+    EN: {
+      naturalStones: "Natural Stones",
+      allNaturalStones: "View All Natural Stones",
+      cappadociaSeries: "Cappadocia Series",
+      balloon: "Balloon",
+      evilEye: "Turkish Eye",
+    },
+    ZH: {
+      naturalStones: "天然宝石",
+      allNaturalStones: "查看全部天然宝石",
+      cappadociaSeries: "卡帕多奇亚系列",
+      balloon: "热气球",
+      evilEye: "纳扎尔之眼",
+    },
+    ES: {
+      naturalStones: "Piedras naturales",
+      allNaturalStones: "Ver todas las piedras naturales",
+      cappadociaSeries: "Serie Capadocia",
+      balloon: "Globo",
+      evilEye: "Ojo turco",
+    },
+  }[lang] || {
+    naturalStones: "Doğal Taşlar",
+    allNaturalStones: "Tüm Doğal Taşları Gör",
+    cappadociaSeries: "Kapadokya Serisi",
+    balloon: "Balon",
+    evilEye: "Nazar",
+  };
   const navigate = useNavigate();
+  const location = useLocation();
+  const menuCloseTimer = useRef(null);
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -324,6 +892,141 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
     }
   };
 
+  const isMobileNavigation = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 768px)").matches;
+
+  const clearMenuCloseTimer = () => {
+    if (menuCloseTimer.current) {
+      window.clearTimeout(menuCloseTimer.current);
+      menuCloseTimer.current = null;
+    }
+  };
+
+  const closeMenusAfterDelay = () => {
+    if (isMobileNavigation()) return;
+
+    clearMenuCloseTimer();
+    menuCloseTimer.current = window.setTimeout(() => {
+      setJewelleryMenuOpen(false);
+      setNaturalStonesMenuOpen(false);
+      setCappadociaMenuOpen(false);
+      menuCloseTimer.current = null;
+    }, 220);
+  };
+
+  const handleJewelleryMouseEnter = () => {
+    if (!isMobileNavigation()) {
+      clearMenuCloseTimer();
+      setNaturalStonesMenuOpen(false);
+      setCappadociaMenuOpen(false);
+      setJewelleryMenuOpen(true);
+    }
+  };
+
+  const handleJewelleryTriggerClick = (e) => {
+    if (isMobileNavigation()) {
+      e.preventDefault();
+      e.stopPropagation();
+      setNaturalStonesMenuOpen(false);
+      setCappadociaMenuOpen(false);
+      setJewelleryMenuOpen((current) => !current);
+    }
+  };
+
+  const handleNaturalStonesMouseEnter = () => {
+    if (!isMobileNavigation()) {
+      clearMenuCloseTimer();
+      setJewelleryMenuOpen(false);
+      setCappadociaMenuOpen(false);
+      setNaturalStonesMenuOpen(true);
+    }
+  };
+
+  const handleNaturalStonesTriggerClick = (e) => {
+    if (isMobileNavigation()) {
+      e.preventDefault();
+      e.stopPropagation();
+      setJewelleryMenuOpen(false);
+      setCappadociaMenuOpen(false);
+      setNaturalStonesMenuOpen((current) => !current);
+    }
+  };
+
+  const handleCappadociaMouseEnter = () => {
+    if (!isMobileNavigation()) {
+      clearMenuCloseTimer();
+      setJewelleryMenuOpen(false);
+      setNaturalStonesMenuOpen(false);
+      setCappadociaMenuOpen(true);
+    }
+  };
+
+  const handleCappadociaTriggerClick = (e) => {
+    if (isMobileNavigation()) {
+      e.preventDefault();
+      e.stopPropagation();
+      setJewelleryMenuOpen(false);
+      setNaturalStonesMenuOpen(false);
+      setCappadociaMenuOpen((current) => !current);
+    }
+  };
+
+  useEffect(() => {
+    clearMenuCloseTimer();
+    setJewelleryMenuOpen(false);
+    setNaturalStonesMenuOpen(false);
+    setCappadociaMenuOpen(false);
+    setShowHeader(true);
+    setLastScrollY(0);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => () => {
+    if (menuCloseTimer.current) {
+      window.clearTimeout(menuCloseTimer.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      (!jewelleryMenuOpen &&
+        !naturalStonesMenuOpen &&
+        !cappadociaMenuOpen) ||
+      !isMobileNavigation()
+    ) return undefined;
+
+    const closeFromOutside = (event) => {
+      const target = event.target;
+
+      if (
+        target instanceof Element &&
+        target.closest('.mega-nav-item')
+      ) {
+        return;
+      }
+
+      setJewelleryMenuOpen(false);
+      setNaturalStonesMenuOpen(false);
+      setCappadociaMenuOpen(false);
+    };
+
+    const closeWithEscape = (event) => {
+      if (event.key === 'Escape') {
+        setJewelleryMenuOpen(false);
+        setNaturalStonesMenuOpen(false);
+        setCappadociaMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', closeFromOutside);
+    document.addEventListener('keydown', closeWithEscape);
+
+    return () => {
+      document.removeEventListener('pointerdown', closeFromOutside);
+      document.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [jewelleryMenuOpen, naturalStonesMenuOpen, cappadociaMenuOpen]);
+
   const SearchIcon = () => (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 8px' }}>
       <circle cx="11" cy="11" r="8"></circle>
@@ -335,9 +1038,22 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
     <header className={showHeader ? 'header-visible' : 'header-hidden'}>
       <div className="top-bar">
         <div className="top-left">
+          <button
+            className="mobile-menu-icon"
+            type="button"
+            aria-label="Menu"
+            onClick={() => {
+              const nav = document.querySelector('.main-nav');
+              if (nav) nav.classList.toggle('mobile-nav-open');
+            }}
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
           <Link to="/store" className="top-link">{value.t.findStore}</Link>
           <div className="lang-switcher">
-            {['EN', 'TR', 'ZH'].map((l) => (
+            {['EN', 'TR', 'ZH', 'ES'].map((l) => (
               <span key={l} onClick={() => setLang(l)} className={lang === l ? 'active' : ''}>{l}</span>
             ))}
           </div>
@@ -367,7 +1083,9 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             <span>{value.t.cart} ({value.cart.length})</span>
           </Link>
-          <span>{value.t.account}</span>
+          <Link to="/account" className="account-link">
+            {value.t.account}
+          </Link>
         </div>
       </div>
 
@@ -376,8 +1094,195 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
       </div>
 
       <nav className="main-nav">
-        <Link className="nav-item" to="/telkari">{value.t.telkari}</Link>
-        <Link className="nav-item" to="/jewellery">{value.t.jewellery}</Link>
+        <div
+          className={`mega-nav-item ${jewelleryMenuOpen ? "open" : ""}`}
+          onMouseEnter={handleJewelleryMouseEnter}
+          onMouseLeave={closeMenusAfterDelay}
+        >
+          <Link
+            className="nav-item mega-nav-trigger"
+            to="/jewellery"
+            onFocus={handleJewelleryMouseEnter}
+            onClick={handleJewelleryTriggerClick}
+            aria-expanded={jewelleryMenuOpen}
+            aria-haspopup="true"
+          >
+            <span>{value.t.jewelleryMenu}</span>
+            <span className="mobile-submenu-arrow" aria-hidden="true">⌄</span>
+          </Link>
+
+          <div
+            className="jewellery-mega-menu"
+            onMouseEnter={handleJewelleryMouseEnter}
+            onMouseLeave={closeMenusAfterDelay}
+            onClick={() => setJewelleryMenuOpen(false)}
+          >
+            <div className="mega-menu-inner">
+              <div className="mega-menu-column">
+                <h4>{value.t.necklacesMenu}</h4>
+                <Link to="/jewellery?category=necklaces&stone=zultanite">{menuText.zultaniteNecklaces}</Link>
+                <Link to="/jewellery?category=necklaces&stone=paraiba">{menuText.paraibaNecklaces}</Link>
+                <Link to="/jewellery?category=necklaces&stone=citrine">{menuText.citrineNecklaces}</Link>
+                <Link to="/jewellery?category=necklaces&stone=moissanite">{menuText.moissaniteNecklaces}</Link>
+                <Link to="/jewellery?category=necklaces">{menuText.minimalNecklaces}</Link>
+                <Link to="/jewellery?category=necklaces">{menuText.statementNecklaces}</Link>
+              </div>
+
+              <div className="mega-menu-column">
+                <h4>{value.t.earringsMenu}</h4>
+                <Link to="/jewellery?category=earrings&stone=zultanite">{menuText.zultaniteEarrings}</Link>
+                <Link to="/jewellery?category=earrings&stone=paraiba">{menuText.paraibaEarrings}</Link>
+                <Link to="/jewellery?category=earrings&stone=citrine">{menuText.citrineEarrings}</Link>
+                <Link to="/jewellery?category=earrings&stone=moissanite">{menuText.moissaniteEarrings}</Link>
+                <Link to="/jewellery?category=earrings">{menuText.dropEarrings}</Link>
+                <Link to="/jewellery?category=earrings">{menuText.hoopEarrings}</Link>
+              </div>
+
+              <div className="mega-menu-column">
+                <h4>{value.t.ringsMenu}</h4>
+                <Link to="/jewellery?category=rings&stone=zultanite">{menuText.zultaniteRings}</Link>
+                <Link to="/jewellery?category=rings&stone=paraiba">{menuText.paraibaRings}</Link>
+                <Link to="/jewellery?category=rings&stone=citrine">{menuText.citrineRings}</Link>
+                <Link to="/jewellery?category=rings&stone=moissanite">{menuText.moissaniteRings}</Link>
+                <Link to="/jewellery?category=rings">{menuText.solitaireRings}</Link>
+                <Link to="/jewellery?category=rings">{menuText.cocktailRings}</Link>
+              </div>
+
+              <div className="mega-menu-column">
+                <h4>{value.t.braceletsMenu}</h4>
+                <Link to="/jewellery?category=bracelets">{menuText.zultaniteBracelets}</Link>
+                <Link to="/jewellery?category=bracelets">{menuText.chainBracelets}</Link>
+                <Link to="/jewellery?category=bracelets">{menuText.gemstoneBracelets}</Link>
+              </div>
+
+              <div className="mega-menu-column">
+                <h4>{value.t.charmsMenu}</h4>
+                <Link to="/jewellery?category=charms">{menuText.necklaceCharms}</Link>
+                <Link to="/jewellery?category=charms">{menuText.braceletCharms}</Link>
+                <Link to="/jewellery?category=charms">{menuText.charms}</Link>
+              </div>
+
+              <div className="mega-menu-feature">
+                <span>KIBELE • CAPPADOCIA</span>
+                <h3>{menuText.collectionTitle}</h3>
+                <Link to="/jewellery">{value.t.allJewelleryMenu} →</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Link className="nav-item" to="/jewellery?stone=zultanite">{value.t.jewellery}</Link>
+
+        <div
+          className={`mega-nav-item natural-stones-nav-item ${naturalStonesMenuOpen ? "open" : ""}`}
+          onMouseEnter={handleNaturalStonesMouseEnter}
+          onMouseLeave={closeMenusAfterDelay}
+        >
+          <Link
+            className="nav-item mega-nav-trigger"
+            to="/jewellery?collection=natural-stones"
+            onFocus={handleNaturalStonesMouseEnter}
+            onClick={handleNaturalStonesTriggerClick}
+            aria-expanded={naturalStonesMenuOpen}
+            aria-haspopup="true"
+          >
+            <span>{value.t.naturalStones || extraMenuText.naturalStones}</span>
+            <span className="mobile-submenu-arrow" aria-hidden="true">⌄</span>
+          </Link>
+
+          <div
+            className="jewellery-mega-menu natural-stones-mega-menu"
+            onMouseEnter={handleNaturalStonesMouseEnter}
+            onMouseLeave={closeMenusAfterDelay}
+          >
+            <div className="mega-menu-inner natural-stones-menu-inner">
+              <div className="natural-stones-link-grid">
+                {naturalStoneItems.map((stone) => (
+                  <Link
+                    className="natural-stone-menu-link"
+                    key={stone.slug}
+                    to={`/jewellery?stone=${stone.slug}`}
+                    onClick={() => setNaturalStonesMenuOpen(false)}
+                  >
+                    <span>{stone.label}</span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="mega-menu-feature natural-stones-menu-feature">
+                <span>KIBELE • NATURAL STONES</span>
+                <h3>{value.t.naturalStones || extraMenuText.naturalStones}</h3>
+                <Link
+                  to="/jewellery?collection=natural-stones"
+                  onClick={() => setNaturalStonesMenuOpen(false)}
+                >
+                  {extraMenuText.allNaturalStones} →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className={`mega-nav-item cappadocia-nav-item ${cappadociaMenuOpen ? "open" : ""}`}
+          onMouseEnter={handleCappadociaMouseEnter}
+          onMouseLeave={closeMenusAfterDelay}
+        >
+          <Link
+            className="nav-item mega-nav-trigger"
+            to="/jewellery?series=cappadocia"
+            onFocus={handleCappadociaMouseEnter}
+            onClick={handleCappadociaTriggerClick}
+            aria-expanded={cappadociaMenuOpen}
+            aria-haspopup="true"
+          >
+            <span>{value.t.cappadociaSeries || extraMenuText.cappadociaSeries}</span>
+            <span className="mobile-submenu-arrow" aria-hidden="true">⌄</span>
+          </Link>
+
+          <div
+            className="jewellery-mega-menu cappadocia-mega-menu"
+            onMouseEnter={handleCappadociaMouseEnter}
+            onMouseLeave={closeMenusAfterDelay}
+          >
+            <div className="mega-menu-inner cappadocia-menu-inner">
+              <Link
+                className="mega-menu-column cappadocia-menu-column"
+                to="/jewellery?series=balloon"
+                onClick={() => setCappadociaMenuOpen(false)}
+              >
+                <h4>{value.t.balloon || extraMenuText.balloon}</h4>
+                <span className="cappadocia-menu-option">
+                  {value.t.allJewelleryMenu} →
+                </span>
+              </Link>
+
+              <Link
+                className="mega-menu-column cappadocia-menu-column"
+                to="/jewellery?series=nazar"
+                onClick={() => setCappadociaMenuOpen(false)}
+              >
+                <h4>{value.t.evilEye || extraMenuText.evilEye}</h4>
+                <span className="cappadocia-menu-option">
+                  {value.t.allJewelleryMenu} →
+                </span>
+              </Link>
+
+              <div className="mega-menu-feature cappadocia-menu-feature">
+                <span>KIBELE • CAPPADOCIA</span>
+                <h3>{value.t.cappadociaSeries || extraMenuText.cappadociaSeries}</h3>
+                <Link
+                  to="/jewellery?series=cappadocia"
+                  onClick={() => setCappadociaMenuOpen(false)}
+                >
+                  {value.t.discoverCappadocia || extraMenuText.cappadociaSeries} →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <Link className="nav-item" to="/gold">{value.t.gold}</Link>
         <Link className="nav-item" to="/watches">{value.t.watches}</Link>
         <Link className="nav-item" to="/bags">{value.t.bagsAccessories}</Link>
         <Link className="nav-item" to="/">{value.t.home}</Link>
@@ -387,8 +1292,31 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
 };
 
 function App() {
-  const [lang, setLang] = useState(localStorage.getItem('language') || 'EN'); 
+  const [lang, setLang] = useState(getInitialLanguage);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState(() => {
+    try {
+      const savedRates = JSON.parse(
+        localStorage.getItem('kibele-exchange-rates') || 'null'
+      );
+
+      const cacheIsFresh =
+        savedRates?.updatedAt &&
+        Date.now() - savedRates.updatedAt < 24 * 60 * 60 * 1000;
+
+      const cachedRates = cacheIsFresh && savedRates?.rates
+        ? savedRates.rates
+        : {};
+
+      return {
+        USD: Number(cachedRates.USD) || null,
+        CNY: Number(cachedRates.CNY) || null,
+        EUR: Number(cachedRates.EUR) || null,
+      };
+    } catch {
+      return { USD: null, CNY: null, EUR: null };
+    }
+  });
   
   // SEPET VE BİLDİRİM STATE'LERİ
   const [cart, setCart] = useState([]);
@@ -404,14 +1332,124 @@ function App() {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
-  useEffect(() => { localStorage.setItem('language', lang); }, [lang]);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('language', lang);
+    } catch {
+      // Tarayıcı depolaması kapalı olsa da site çalışmaya devam eder.
+    }
+  }, [lang]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadExchangeRates = async () => {
+      try {
+        const response = await fetch(
+          'https://api.frankfurter.dev/v2/rates?base=TRY&quotes=USD,CNY,EUR',
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          throw new Error('Döviz kurları alınamadı.');
+        }
+
+        const data = await response.json();
+        const nextRates = { USD: null, CNY: null, EUR: null };
+
+        if (Array.isArray(data)) {
+          data.forEach((item) => {
+            if (
+              (item.quote === 'USD' || item.quote === 'CNY' || item.quote === 'EUR') &&
+              Number(item.rate) > 0
+            ) {
+              nextRates[item.quote] = Number(item.rate);
+            }
+          });
+        } else if (data?.rates) {
+          nextRates.USD = Number(data.rates.USD) || null;
+          nextRates.CNY = Number(data.rates.CNY) || null;
+          nextRates.EUR = Number(data.rates.EUR) || null;
+        }
+
+        if (nextRates.USD && nextRates.CNY && nextRates.EUR) {
+          setExchangeRates(nextRates);
+          localStorage.setItem(
+            'kibele-exchange-rates',
+            JSON.stringify({
+              rates: nextRates,
+              updatedAt: Date.now(),
+            })
+          );
+        }
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('Döviz kuru hatası:', error);
+        }
+      }
+    };
+
+    loadExchangeRates();
+
+    return () => controller.abort();
+  }, []);
+
+  const formatPrice = (price) => {
+    const tryAmount = Number(price || 0);
+
+    if (lang === 'EN' && exchangeRates?.USD) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(tryAmount * exchangeRates.USD);
+    }
+
+    if (lang === 'ZH' && exchangeRates?.CNY) {
+      return new Intl.NumberFormat('zh-CN', {
+        style: 'currency',
+        currency: 'CNY',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(tryAmount * exchangeRates.CNY);
+    }
+
+    if (lang === 'ES' && exchangeRates?.EUR) {
+      return new Intl.NumberFormat('es-ES', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      }).format(tryAmount * exchangeRates.EUR);
+    }
+
+    return `${tryAmount.toLocaleString('tr-TR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })} TL`;
+  };
   
   // setCart value içerisine eklendi ki Cart bileşeni sepeti boşaltabilsin
-  const value = { lang, setLang, t: translations[lang], cart, setCart, addToCart, removeFromCart };
+  const value = {
+    lang,
+    setLang,
+    t: translations[lang] || translations.TR,
+    cart,
+    setCart,
+    addToCart,
+    removeFromCart,
+    formatPrice,
+  };
 
   return (
     <LanguageContext.Provider value={value}>
-      <Router>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <ScrollToTop />
         <div className="app-wrapper">
           
@@ -434,11 +1472,15 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/cart" element={<Cart />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/store" element={<Store />} />
-              <Route path="/telkari" element={<Telkari />} />
-              <Route path="/jewellery" element={<Jewellery />} />
+              <Route path="/telkari" element={<CreateYourOwn />} />
+              <Route path="/jewellery" element={<div className="zultanite-page"><Jewellery /></div>} />
+              <Route path="/gold" element={<Gold />} />
               <Route path="/watches" element={<Watches />} />
               <Route path="/bags" element={<Bags />} />
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
             </Routes>
           </main>
 
@@ -491,13 +1533,212 @@ function App() {
           
           .cart-container-link { display: flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer; }
           .cart-container-link span { font-size: 11px; letter-spacing: 1px; }
+          .account-link { font-size: 11px; letter-spacing: 1px; text-decoration: none; white-space: nowrap; }
 
           .logo-container { text-align: center; padding: 30px 0 10px; }
           .logo-container h1 { font-family: 'serif'; font-size: 52px; font-weight: 200; letter-spacing: 18px; margin: 0; }
           
-          .main-nav { display: flex; justify-content: center; gap: 50px; padding: 10px 0 30px; }
+          .main-nav {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: stretch;
+            column-gap: 30px;
+            row-gap: 14px;
+            padding: 10px 24px 30px;
+          }
           .nav-item { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; text-decoration: none; font-weight: 300; transition: opacity 0.3s; }
           .nav-item:hover { opacity: 0.6; }
+
+          /* Üst menü ve Takılar mega menüsünde hiçbir bağlantının altını çizme */
+          .main-nav a,
+          .main-nav a:hover,
+          .main-nav a:focus,
+          .main-nav a:active {
+            text-decoration: none !important;
+            border-bottom: 0 !important;
+          }
+
+          /* SWAROVSKI TARZI TAM GENİŞLİK TAKILAR MEGA MENÜSÜ */
+          .mega-nav-item {
+            position: static;
+            display: flex;
+            align-items: center;
+            align-self: stretch;
+          }
+
+          .mega-nav-trigger {
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 0 10px;
+            margin-bottom: -10px;
+          }
+
+          .mobile-submenu-arrow {
+            display: none;
+          }
+
+          /* Başlık ile açılan panel arasındaki alanı tıklanabilir tutar */
+          .mega-nav-trigger::before {
+            content: "";
+            position: absolute;
+            left: -10px;
+            right: -10px;
+            top: 100%;
+            height: 36px;
+            background: transparent;
+            pointer-events: auto;
+          }
+          .mega-nav-item.open .mega-nav-trigger::after,
+          .mega-nav-item:hover .mega-nav-trigger::after {
+            content: none;
+          }
+          .jewellery-mega-menu {
+            position: absolute;
+            top: calc(100% - 1px);
+            left: 0;
+            width: 100vw;
+            background: #fff;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #e8e8e8;
+            box-shadow: 0 18px 34px rgba(0,0,0,.07);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-8px);
+            transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
+            z-index: 1300;
+          }
+          .mega-nav-item:hover .jewellery-mega-menu,
+          .mega-nav-item.open .jewellery-mega-menu {
+            opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0);
+          }
+          .mega-menu-inner {
+            width: min(1420px, calc(100% - 100px));
+            margin: 0 auto;
+            padding: 38px 0 44px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(125px,1fr)) minmax(230px,1.35fr);
+            gap: 34px;
+            align-items: start;
+          }
+          .mega-menu-column h4 {
+            margin: 0 0 19px;
+            font-size: 11px; letter-spacing: .5px; font-weight: 700;
+          }
+          .mega-menu-column a {
+            display: block; margin: 0 0 14px; text-decoration: none;
+            font-size: 11px; line-height: 1.35; letter-spacing: .25px; opacity: .58;
+            transition: opacity .2s ease;
+          }
+          .mega-menu-column a:hover { opacity: 1; text-decoration: none; }
+          .mega-menu-feature {
+            min-height: 205px; padding: 27px;
+            background: linear-gradient(135deg,#f7f4ec,#efebe0);
+            display: flex; flex-direction: column; justify-content: flex-end;
+          }
+          .mega-menu-feature > span { font-size: 7px; letter-spacing: 2.3px; opacity: .48; margin-bottom: 10px; }
+          .mega-menu-feature h3 { font-family: serif; font-size: 20px; font-weight: 300; letter-spacing: 2px; margin: 0 0 20px; }
+          .mega-menu-feature a { font-size: 9px; letter-spacing: 1.5px; text-decoration: none; font-weight: 600; }
+
+          .cappadocia-menu-inner {
+            width: min(1420px, calc(100% - 100px));
+            margin: 0 auto;
+            padding: 38px 0 44px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(125px, 1fr)) minmax(230px, 1.35fr);
+            gap: 34px;
+            align-items: start;
+          }
+
+          .cappadocia-menu-feature {
+            grid-column: 6;
+            min-height: 205px;
+          }
+
+          .cappadocia-menu-column {
+            display: block;
+            text-decoration: none !important;
+            cursor: pointer;
+          }
+
+          .cappadocia-menu-option {
+            display: block;
+            margin-top: 19px;
+            font-size: 11px;
+            line-height: 1.35;
+            letter-spacing: .25px;
+            opacity: .58;
+            transition: opacity .2s ease;
+          }
+
+          .cappadocia-menu-column:hover .cappadocia-menu-option {
+            opacity: 1;
+          }
+
+          .natural-stones-menu-inner {
+            width: min(1420px, calc(100% - 100px));
+            margin: 0 auto;
+            padding: 38px 0 44px;
+            display: grid;
+            grid-template-columns: minmax(0, 4fr) minmax(230px, 1.25fr);
+            gap: 44px;
+            align-items: stretch;
+          }
+
+          .natural-stones-link-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(130px, 1fr));
+            gap: 0 28px;
+            align-content: start;
+          }
+
+          .natural-stone-menu-link {
+            min-height: 54px;
+            padding: 15px 2px;
+            border-bottom: 1px solid #ece9e2 !important;
+            display: flex;
+            align-items: center;
+            color: #151513;
+            font-size: 11px;
+            line-height: 1.35;
+            letter-spacing: .45px;
+            text-decoration: none !important;
+            opacity: .72;
+            transition: opacity .2s ease, padding-left .2s ease;
+          }
+
+          .natural-stone-menu-link:hover,
+          .natural-stone-menu-link:focus {
+            padding-left: 6px;
+            opacity: 1;
+          }
+
+          .natural-stones-menu-feature {
+            min-height: 205px;
+          }
+
+          .mobile-menu-icon {
+            display: none;
+            width: 24px;
+            height: 24px;
+            padding: 4px;
+            border: 0;
+            background: transparent;
+            flex: 0 0 auto;
+            cursor: pointer;
+          }
+
+          .mobile-menu-icon span {
+            display: block;
+            width: 14px;
+            height: 1px;
+            background: #000;
+            margin: 3px auto;
+          }
 
           /* BİLDİRİM TOAST CSS */
           .cart-notification-toast {
@@ -563,19 +1804,932 @@ function App() {
           }
 
           /* BANNER & GRID */
-          .banner-container { width: 100%; height: 85vh; position: relative; overflow: hidden; }
-          .banner-img { width: 100%; height: 100%; object-fit: cover; position: absolute; transition: opacity 1s ease; }
-          .banner-img.hidden { opacity: 0; }
-          
-          .section-title { text-align: center; padding: 80px 0 50px; width: 100%; }
-          .section-title h2 { font-size: 18px; font-weight: 300; letter-spacing: 6px; text-transform: uppercase; }
-          .title-line { width: 50px; height: 1px; background: #000; margin: 20px auto; }
+          .banner-container {
+            width: 100%;
+            height: 68vh;
+            min-height: 520px;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+          }
 
-          .product-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; padding: 0 40px 100px; width: 100%; }
-          .img-wrapper { aspect-ratio: 3/4; overflow: hidden; background: #f9f9f9; }
-          .img-wrapper img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s ease; }
-          .img-wrapper:hover img { transform: scale(1.05); }
-          .product-info { padding: 15px 0; font-size: 10px; text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+          .banner-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+            background: #fff;
+            transform: none;
+          }
+
+.section-title {
+            text-align: center;
+            padding: 70px 20px 45px;
+            width: 100%;
+          }
+
+          .section-title h2 {
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            line-height: 1.45;
+            margin: 0;
+          }
+
+          .title-line {
+            width: 50px;
+            height: 1px;
+            background: #000;
+            margin: 20px auto;
+          }
+
+          .product-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 15px;
+            padding: 0 40px 100px;
+            width: 100%;
+          }
+
+          .img-wrapper {
+            aspect-ratio: 3/4;
+            overflow: hidden;
+            background: #f9f9f9;
+          }
+
+          .img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 1s ease;
+          }
+
+          .img-wrapper:hover img {
+            transform: scale(1.05);
+          }
+
+          /* ZULTANITE SAYFASI - ÜRÜNE YAKLAŞMA EFEKTİ */
+          .zultanite-page {
+            width: 100%;
+            overflow-x: hidden;
+          }
+
+          .zultanite-page img {
+            transition:
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.45s ease !important;
+            transform-origin: center center;
+          }
+
+          .zultanite-page img:hover {
+            transform: scale(1.18);
+            filter: brightness(1.02) contrast(1.02);
+          }
+
+          .zultanite-page .img-wrapper,
+          .zultanite-page .image-wrapper,
+          .zultanite-page .product-image,
+          .zultanite-page .product-img,
+          .zultanite-page .product-image-wrapper,
+          .zultanite-page .product-card {
+            overflow: hidden;
+          }
+
+          @media (hover: none), (max-width: 768px) {
+            .zultanite-page img:hover {
+              transform: none;
+              filter: none;
+            }
+          }
+
+          .product-info {
+            padding: 15px 0;
+            font-size: 10px;
+            text-align: center;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+          }
+
+
+          /* HOME COLLECTIONS - COMPACT PREMIUM EDITORIAL */
+          .home-collections {
+            width: 100%;
+            padding: 34px 4vw 92px;
+            background: #fff;
+          }
+
+          .home-collections-heading {
+            text-align: center;
+            max-width: 760px;
+            margin: 0 auto 40px;
+          }
+
+          .home-collections-kicker {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 8px;
+            letter-spacing: 3.5px;
+            font-weight: 600;
+            opacity: 0.45;
+          }
+
+          .home-collections-heading h2 {
+            margin: 0;
+            font-family: serif;
+            font-size: 30px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            line-height: 1.2;
+            text-transform: uppercase;
+          }
+
+          .home-collections-line {
+            width: 42px;
+            height: 1px;
+            background: #000;
+            margin: 18px auto 0;
+            opacity: 0.7;
+          }
+
+          .home-collections-grid {
+            width: 100%;
+            max-width: 1500px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+          }
+
+          .home-collection-card {
+            min-width: 0;
+          }
+
+          .home-collection-image-wrap {
+            position: relative;
+            aspect-ratio: 5 / 4;
+            overflow: hidden;
+            background: #f6f6f4;
+          }
+
+          .home-collection-image-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+          }
+
+          .home-collection-card:hover img {
+            transform: scale(1.035);
+          }
+
+          .home-collection-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+              180deg,
+              rgba(0,0,0,0.02) 10%,
+              rgba(0,0,0,0.05) 55%,
+              rgba(0,0,0,0.42) 100%
+            );
+            pointer-events: none;
+          }
+
+          .home-collection-number {
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            color: #fff !important;
+            font-size: 8px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            opacity: 0.9;
+          }
+
+          .home-collection-content {
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            bottom: 16px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            text-align: left;
+          }
+
+          .home-collection-content h3 {
+            margin: 0;
+            color: #fff !important;
+            font-family: serif;
+            font-size: 21px;
+            font-weight: 300;
+            letter-spacing: 1.4px;
+            line-height: 1.1;
+            text-transform: uppercase;
+          }
+
+          .home-collection-link {
+            color: #fff !important;
+            font-size: 7px;
+            letter-spacing: 1.8px;
+            font-weight: 600;
+            white-space: nowrap;
+            opacity: 0.9;
+          }
+
+
+
+          /* CREATE YOUR OWN / KENDİN YAP */
+          .custom-design-page {
+            width: 100%;
+            background: #fff;
+          }
+
+          .custom-design-intro {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 90px 24px 55px;
+            text-align: center;
+          }
+
+          .custom-design-intro > span {
+            display: block;
+            margin-bottom: 16px;
+            font-size: 8px;
+            letter-spacing: 4px;
+            font-weight: 600;
+            opacity: 0.45;
+          }
+
+          .custom-design-intro h1 {
+            margin: 0;
+            font-family: serif;
+            font-size: 42px;
+            font-weight: 300;
+            letter-spacing: 9px;
+          }
+
+          .custom-design-line {
+            width: 44px;
+            height: 1px;
+            margin: 22px auto;
+            background: #000;
+          }
+
+          .custom-design-intro p {
+            max-width: 650px;
+            margin: 0 auto;
+            font-size: 11px;
+            line-height: 1.9;
+            letter-spacing: 1px;
+            opacity: 0.62;
+          }
+
+          .custom-design-studio {
+            width: calc(100% - 80px);
+            max-width: 1400px;
+            margin: 0 auto 100px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(420px, 0.9fr);
+            gap: 70px;
+            padding: 55px;
+            border: 1px solid #eee;
+            background: #fcfcfb;
+          }
+
+          .custom-design-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 34px;
+          }
+
+          .custom-group-heading {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 13px;
+          }
+
+          .custom-option-group h3 {
+            margin: 0;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2.4px;
+          }
+
+          .custom-group-heading > span {
+            font-family: serif;
+            font-size: 12px;
+            letter-spacing: 0.7px;
+            opacity: 0.55;
+          }
+
+          .custom-option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+          }
+
+          .custom-visual-option {
+            position: relative;
+            min-height: 108px;
+            padding: 14px 12px 12px;
+            border: 1px solid #e3e0dc;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition:
+              border-color 0.25s ease,
+              box-shadow 0.25s ease,
+              transform 0.25s ease,
+              background 0.25s ease;
+          }
+
+          .custom-visual-option:hover {
+            border-color: #aaa39a;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.04);
+          }
+
+          .custom-visual-option.selected {
+            border-color: #111;
+            background: #fbfaf8;
+            box-shadow: inset 0 0 0 1px #111, 0 9px 24px rgba(0,0,0,0.06);
+          }
+
+          .custom-option-label {
+            font-size: 9px;
+            letter-spacing: 1.1px;
+            font-weight: 600;
+            line-height: 1.2;
+          }
+
+          .custom-selected-check {
+            position: absolute;
+            top: 8px;
+            right: 9px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #111;
+            color: #fff !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            opacity: 0;
+            transform: scale(0.7);
+            transition: 0.2s ease;
+          }
+
+          .custom-visual-option.selected .custom-selected-check {
+            opacity: 1;
+            transform: scale(1);
+          }
+
+          /* ÜRÜN SEÇİM İKONLARI */
+          .product-choice-icon {
+            position: relative;
+            width: 52px;
+            height: 45px;
+            display: block;
+          }
+
+          .product-choice-ring::before {
+            content: "";
+            position: absolute;
+            left: 12px;
+            top: 13px;
+            width: 27px;
+            height: 27px;
+            border: 2px solid #555;
+            border-radius: 50%;
+          }
+
+          .product-choice-ring::after {
+            content: "";
+            position: absolute;
+            left: 21px;
+            top: 3px;
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg,#d8c7a0,#7d815e,#e5b5ae);
+            transform: rotate(45deg);
+            box-shadow: 0 0 0 2px #777;
+          }
+
+          .product-choice-necklace::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 38px;
+            height: 30px;
+            border: 1.8px solid #666;
+            border-top-color: transparent;
+            border-radius: 0 0 50% 50%;
+          }
+
+          .product-choice-necklace::after {
+            content: "";
+            position: absolute;
+            left: 21px;
+            top: 28px;
+            width: 10px;
+            height: 10px;
+            background: linear-gradient(135deg,#d9c8a5,#7d8058,#d9aab1);
+            transform: rotate(45deg);
+          }
+
+          .product-choice-bracelet::before {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 10px;
+            width: 44px;
+            height: 23px;
+            border: 3px solid #666;
+            border-radius: 50%;
+          }
+
+          .product-choice-bracelet::after {
+            content: "••••••";
+            position: absolute;
+            left: 7px;
+            top: 13px;
+            font-size: 12px;
+            letter-spacing: 0px;
+            color: #aaa !important;
+          }
+
+          .product-choice-earring::before,
+          .product-choice-earring::after {
+            content: "";
+            position: absolute;
+            top: 5px;
+            width: 15px;
+            height: 29px;
+            border: 2px solid #666;
+            border-radius: 50%;
+          }
+
+          .product-choice-earring::before { left: 7px; }
+          .product-choice-earring::after { right: 7px; }
+
+          /* METAL RENKLERİ */
+          .metal-choice-swatch,
+          .preview-metal-dot {
+            display: block;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.13);
+          }
+
+          .metal-choice-swatch {
+            width: 42px;
+            height: 42px;
+            box-shadow:
+              inset -8px -8px 15px rgba(0,0,0,0.10),
+              inset 8px 8px 15px rgba(255,255,255,0.7);
+          }
+
+          .metal-choice-silver {
+            background: linear-gradient(135deg,#f8f8f8 5%,#b9bcc0 45%,#f2f2f2 68%,#8f9499 100%);
+          }
+
+          .metal-choice-gold {
+            background: linear-gradient(135deg,#fff1a8 0%,#d2a83e 42%,#f6d66a 65%,#9e7721 100%);
+          }
+
+          .metal-choice-whiteGold {
+            background: linear-gradient(135deg,#ffffff 0%,#d9d7d2 38%,#f7f5ef 62%,#aaa9a4 100%);
+          }
+
+          /* TAŞ RENKLERİ */
+          .stone-choice-gem,
+          .preview-stone-dot {
+            display: block;
+            border: 1px solid rgba(0,0,0,0.13);
+            box-shadow:
+              inset 7px 7px 12px rgba(255,255,255,0.35),
+              inset -7px -7px 14px rgba(0,0,0,0.13),
+              0 3px 8px rgba(0,0,0,0.08);
+          }
+
+          .stone-choice-gem {
+            width: 42px;
+            height: 42px;
+            transform: rotate(45deg);
+            border-radius: 11px;
+          }
+
+          .stone-choice-zultanite {
+            background: linear-gradient(135deg,#8a915d 0%,#d5b36f 32%,#b87b78 67%,#6f7850 100%);
+          }
+
+          .stone-choice-aquamarine {
+            background: linear-gradient(135deg,#daf8fb 0%,#81cbd8 50%,#bfeef3 100%);
+          }
+
+          .stone-choice-paraiba {
+            background: linear-gradient(135deg,#a6fff1 0%,#24c8b5 47%,#61ddd0 100%);
+          }
+
+          .stone-choice-quartz {
+            background: linear-gradient(135deg,#fff2f6 0%,#e3a9b9 45%,#f1cbd4 100%);
+          }
+
+          /* KESİM ŞEKİLLERİ */
+          .shape-choice-icon {
+            display: block;
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(145deg,#f8f8f8,#cfcfcf);
+            border: 1px solid #999;
+            box-shadow: inset 5px 5px 8px rgba(255,255,255,0.8), inset -5px -5px 8px rgba(0,0,0,0.10);
+          }
+
+          .shape-choice-round {
+            border-radius: 50%;
+          }
+
+          .shape-choice-oval {
+            width: 34px;
+            border-radius: 50%;
+          }
+
+          .shape-choice-pear {
+            width: 34px;
+            border-radius: 50% 50% 50% 8%;
+            transform: rotate(45deg);
+          }
+
+          .shape-choice-emerald {
+            width: 35px;
+            height: 42px;
+            clip-path: polygon(20% 0,80% 0,100% 20%,100% 80%,80% 100%,20% 100%,0 80%,0 20%);
+          }
+
+          .custom-engraving-input {
+            width: 100%;
+            height: 50px;
+            padding: 0 14px;
+            border: 1px solid #ddd;
+            background: #fff;
+            font-size: 11px;
+            letter-spacing: 0.8px;
+          }
+
+          .custom-design-preview-column {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+          }
+
+          .custom-design-preview {
+            position: relative;
+            min-height: 430px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #eee;
+          }
+
+          .custom-preview-label {
+            position: absolute;
+            top: 18px;
+            left: 20px;
+            font-size: 8px;
+            letter-spacing: 2.5px;
+            opacity: 0.45;
+          }
+
+          .custom-preview-topbar {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            z-index: 4;
+          }
+
+          .custom-preview-topbar .custom-preview-label {
+            position: static;
+          }
+
+          .custom-preview-chips {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 7px;
+            letter-spacing: 0.7px;
+            opacity: 0.7;
+          }
+
+          .preview-metal-dot,
+          .preview-stone-dot {
+            width: 13px;
+            height: 13px;
+            flex: 0 0 auto;
+          }
+
+          .preview-stone-dot {
+            border-radius: 4px;
+            transform: rotate(45deg);
+            margin-left: 6px;
+          }
+
+          .custom-preview-cut {
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+            padding: 7px 10px;
+            border: 1px solid #e5e2dd;
+            background: rgba(255,255,255,0.9);
+            font-size: 7px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+          }
+
+          .custom-jewel {
+            position: relative;
+            width: 190px;
+            height: 190px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .custom-ring::before {
+            content: "";
+            position: absolute;
+            width: 130px;
+            height: 130px;
+            border: 10px solid #bfc0c2;
+            border-radius: 50%;
+          }
+
+          .metal-gold .custom-ring::before { border-color: #c9a34b; }
+          .metal-whiteGold .custom-ring::before { border-color: #d8d8d8; }
+
+          .custom-necklace::before {
+            content: "";
+            position: absolute;
+            width: 155px;
+            height: 125px;
+            border: 3px solid #bfc0c2;
+            border-top-color: transparent;
+            border-radius: 0 0 50% 50%;
+            top: 10px;
+          }
+
+          .metal-gold .custom-necklace::before { border-color: #c9a34b; border-top-color: transparent; }
+          .metal-whiteGold .custom-necklace::before { border-color: #d8d8d8; border-top-color: transparent; }
+
+          .custom-bracelet::before {
+            content: "";
+            position: absolute;
+            width: 155px;
+            height: 105px;
+            border: 8px solid #bfc0c2;
+            border-radius: 50%;
+          }
+
+          .metal-gold .custom-bracelet::before { border-color: #c9a34b; }
+          .metal-whiteGold .custom-bracelet::before { border-color: #d8d8d8; }
+
+          .custom-earring::before,
+          .custom-earring::after {
+            content: "";
+            position: absolute;
+            width: 3px;
+            height: 72px;
+            background: #bfc0c2;
+            top: 38px;
+          }
+
+          .custom-earring::before { left: 65px; }
+          .custom-earring::after { right: 65px; }
+          .metal-gold .custom-earring::before,
+          .metal-gold .custom-earring::after { background: #c9a34b; }
+          .metal-whiteGold .custom-earring::before,
+          .metal-whiteGold .custom-earring::after { background: #d8d8d8; }
+
+          .custom-stone {
+            position: relative;
+            z-index: 2;
+            font-size: 56px;
+            line-height: 1;
+            text-shadow: 0 5px 18px rgba(0,0,0,0.13);
+          }
+
+          .stone-zultanite .custom-stone { color: #7e8052 !important; }
+          .stone-aquamarine .custom-stone { color: #8cc9d5 !important; }
+          .stone-paraiba .custom-stone { color: #48c7bd !important; }
+          .stone-quartz .custom-stone { color: #e5b7c3 !important; }
+
+          .custom-stone.shape-round {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+          }
+
+          .custom-stone.shape-oval {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 82px;
+            border-radius: 50%;
+            overflow: hidden;
+          }
+
+          .custom-stone.shape-pear {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 78px;
+            border-radius: 52% 52% 52% 10%;
+            transform: rotate(45deg);
+            overflow: hidden;
+          }
+
+          .custom-stone.shape-emerald {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 78px;
+            clip-path: polygon(18% 0,82% 0,100% 18%,100% 82%,82% 100%,18% 100%,0 82%,0 18%);
+            overflow: hidden;
+          }
+
+          .stone-zultanite .custom-stone {
+            background: linear-gradient(135deg,#8b925c 0%,#e2bc73 35%,#b66f76 66%,#66714c 100%);
+          }
+          .stone-aquamarine .custom-stone {
+            background: linear-gradient(135deg,#e4fbfd,#79c9d7 52%,#b7edf2);
+          }
+          .stone-paraiba .custom-stone {
+            background: linear-gradient(135deg,#a8fff1,#23c7b4 50%,#62dfd2);
+          }
+          .stone-quartz .custom-stone {
+            background: linear-gradient(135deg,#fff3f7,#dfa8b8 52%,#efc9d3);
+          }
+
+          .custom-stone {
+            color: rgba(255,255,255,0.38) !important;
+            border: 1px solid rgba(255,255,255,0.72);
+            box-shadow:
+              inset 12px 12px 20px rgba(255,255,255,0.30),
+              inset -12px -12px 24px rgba(0,0,0,0.12),
+              0 8px 22px rgba(0,0,0,0.15);
+            font-size: 22px;
+          }
+
+          .custom-earring .custom-stone {
+            transform: translateY(42px);
+          }
+
+          .custom-engraving-preview {
+            position: absolute;
+            bottom: 24px;
+            font-family: serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            opacity: 0.55;
+          }
+
+          .custom-design-summary {
+            padding: 26px 28px;
+            background: #fff;
+            border: 1px solid #eee;
+          }
+
+          .custom-summary-title {
+            display: block;
+            margin-bottom: 18px;
+            font-size: 8px;
+            letter-spacing: 2.5px;
+            font-weight: 600;
+            opacity: 0.5;
+          }
+
+          .custom-design-summary p {
+            margin: 7px 0;
+            font-family: serif;
+            font-size: 15px;
+            letter-spacing: 0.7px;
+          }
+
+          .custom-send-button {
+            display: block;
+            width: 100%;
+            margin-top: 24px;
+            padding: 17px 15px;
+            background: #000;
+            color: #fff !important;
+            text-align: center;
+            text-decoration: none;
+            font-size: 9px;
+            letter-spacing: 2px;
+          }
+
+          .custom-design-summary small {
+            display: block;
+            margin-top: 15px;
+            font-size: 8px;
+            line-height: 1.6;
+            letter-spacing: 0.5px;
+            opacity: 0.5;
+          }
+
+          /* GOLD PAGE */
+          .gold-page {
+            width: 100%;
+            min-height: 65vh;
+            background: #fff;
+          }
+
+          .gold-hero {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 110px 24px 70px;
+            text-align: center;
+          }
+
+          .gold-kicker {
+            display: block;
+            margin-bottom: 18px;
+            font-size: 8px;
+            letter-spacing: 4px;
+            font-weight: 600;
+            opacity: 0.45;
+          }
+
+          .gold-hero h1 {
+            margin: 0;
+            font-family: serif;
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+          }
+
+          .gold-line {
+            width: 46px;
+            height: 1px;
+            background: #000;
+            margin: 24px auto;
+          }
+
+          .gold-subtitle {
+            max-width: 620px;
+            margin: 0 auto;
+            font-size: 11px;
+            line-height: 1.9;
+            letter-spacing: 1.2px;
+            opacity: 0.6;
+          }
+
+          .gold-coming-soon {
+            width: calc(100% - 80px);
+            max-width: 1400px;
+            min-height: 280px;
+            margin: 0 auto 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7f4ee;
+            border: 1px solid #eee7dc;
+          }
+
+          .gold-coming-soon span {
+            font-size: 10px;
+            letter-spacing: 4px;
+            font-weight: 500;
+            opacity: 0.6;
+          }
 
           /* FOOTER */
           .footer-container { background-color: #fff; padding: 100px 40px 40px; border-top: 1px solid #f2f2f2; }
@@ -594,20 +2748,503 @@ function App() {
           .footer-bottom { margin-top: 80px; padding-top: 30px; border-top: 1px solid #f9f9f9; text-align: center; }
           .footer-bottom p { font-size: 9px; letter-spacing: 2px; color: #bbb; }
 
-          @media (max-width: 1200px) { 
-            .product-grid { grid-template-columns: repeat(4, 1fr); } 
-            .cart-layout { gap: 40px; }
+          @media (max-width: 1200px) {
+            .main-nav {
+              gap: 24px;
+            }
+
+            .nav-item {
+              font-size: 9.5px;
+              letter-spacing: 2px;
+            }
+
+            .product-grid {
+              grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .cart-layout {
+              gap: 40px;
+            }
+
+            .banner-video {
+              width: 68%;
+              height: 68%;
+            }
           }
+
           @media (max-width: 992px) {
-            .footer-content { grid-template-columns: 1fr; gap: 60px; }
-            .footer-left, .footer-right { align-items: center; text-align: center; }
-            .footer-center { order: -1; }
-            .cart-layout { grid-template-columns: 1fr; }
+            .main-nav {
+              gap: 14px;
+            }
+
+            .nav-item {
+              font-size: 8px;
+              letter-spacing: 1.1px;
+            }
+
+            .footer-content {
+              grid-template-columns: 1fr;
+              gap: 60px;
+            }
+
+            .footer-left,
+            .footer-right {
+              align-items: center;
+              text-align: center;
+            }
+
+            .footer-center {
+              order: -1;
+            }
+
+            .cart-layout {
+              grid-template-columns: 1fr;
+            }
           }
-          @media (max-width: 768px) { 
-            .product-grid { grid-template-columns: repeat(2, 1fr); padding: 0 20px 60px; }
-            .logo-container h1 { font-size: 32px; letter-spacing: 8px; }
-            main { padding-top: 160px !important; }
+
+@media (max-width: 768px) {
+            main {
+              padding-top: 175px !important;
+            }
+
+            header {
+              background: rgba(255,255,255,0.98);
+            }
+
+            .top-bar {
+              padding: 10px 12px;
+              min-height: 48px;
+              gap: 6px;
+              overflow: hidden;
+            }
+
+            .top-left,
+            .top-right {
+              gap: 10px;
+              min-width: 0;
+              flex: 0 1 auto;
+            }
+
+            .top-left {
+              flex: 1 1 auto;
+              justify-content: flex-start;
+            }
+
+            .top-right {
+              margin-left: auto;
+              justify-content: flex-end;
+            }
+
+            .mobile-menu-icon {
+              display: block;
+            }
+
+            .top-link,
+            .cart-container-link span,
+            .top-right > span,
+            .account-link {
+              font-size: 8.5px;
+              letter-spacing: 0.2px;
+              white-space: nowrap;
+            }
+
+            .lang-switcher {
+              display: flex;
+              white-space: nowrap;
+            }
+
+            .lang-switcher span {
+              font-size: 8px;
+              margin: 0 2px;
+            }
+
+            .search-box {
+              display: none;
+            }
+
+            .logo-container {
+              padding: 18px 0 10px;
+            }
+
+            .logo-container h1 {
+              font-size: 34px;
+              letter-spacing: 10px;
+              white-space: nowrap;
+            }
+
+            .main-nav {
+              position: relative;
+              display: flex;
+              flex-wrap: wrap;
+              justify-content: center;
+              align-items: center;
+              column-gap: 17px;
+              row-gap: 11px;
+              padding: 10px 10px 16px;
+              width: 100%;
+              overflow: visible;
+              border-top: 1px solid #f7f7f7;
+            }
+
+            .nav-item {
+              flex: 0 0 auto;
+              font-size: 6.8px;
+              letter-spacing: 0.65px;
+              line-height: 1.2;
+              white-space: nowrap;
+              padding: 0 2px;
+            }
+
+            .mega-nav-item {
+              position: static;
+              display: flex;
+              align-items: center;
+              align-self: auto;
+              height: auto;
+              flex: 0 0 auto;
+            }
+
+            .mega-nav-trigger::before {
+              content: none;
+            }
+
+            .mega-nav-trigger {
+              height: auto;
+              min-height: 0;
+              margin: 0;
+              padding: 0 2px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 2px;
+            }
+
+            .mobile-submenu-arrow {
+              display: inline-block;
+              font-size: 8px;
+              line-height: 1;
+              transform: translateY(-1px);
+              transition: transform .2s ease;
+            }
+
+            .mega-nav-item.open .mobile-submenu-arrow {
+              transform: translateY(1px) rotate(180deg);
+            }
+
+            .jewellery-mega-menu {
+              display: block !important;
+              position: absolute;
+              top: 100%;
+              left: 0;
+              width: 100%;
+              max-height: calc(100vh - 148px);
+              overflow-y: auto;
+              overscroll-behavior: contain;
+              background: #fff;
+              border-top: 1px solid #eee;
+              border-bottom: 1px solid #ddd;
+              box-shadow: 0 18px 30px rgba(0,0,0,.12);
+              opacity: 0;
+              visibility: hidden;
+              pointer-events: none;
+              transform: translateY(-6px);
+              transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
+              z-index: 1500;
+            }
+
+            /* Dokunmatik cihazlarda kalan :hover durumu menüyü açık tutmasın */
+            .mega-nav-item:hover .jewellery-mega-menu {
+              opacity: 0;
+              visibility: hidden;
+              pointer-events: none;
+              transform: translateY(-6px);
+            }
+
+            .mega-nav-item.open .jewellery-mega-menu {
+              opacity: 1;
+              visibility: visible;
+              pointer-events: auto;
+              transform: translateY(0);
+            }
+
+            .mega-menu-inner {
+              width: 100%;
+              margin: 0;
+              padding: 22px 18px 30px;
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 24px 18px;
+              align-items: start;
+            }
+
+            .mega-menu-column h4 {
+              margin-bottom: 14px;
+              font-size: 10px;
+              letter-spacing: 1px;
+            }
+
+            .mega-menu-column a {
+              margin-bottom: 11px;
+              font-size: 9.5px;
+              line-height: 1.45;
+              opacity: .68;
+            }
+
+            .mega-menu-feature {
+              grid-column: 1 / -1;
+              min-height: 150px;
+              padding: 22px;
+            }
+
+            .cappadocia-menu-inner {
+              width: 100%;
+              margin: 0;
+              padding: 22px 18px 28px;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 24px 18px;
+            }
+
+            .cappadocia-menu-column {
+              grid-column: 1 / -1;
+            }
+
+            .cappadocia-menu-feature {
+              grid-column: 1 / -1;
+              min-height: 140px;
+            }
+
+            .natural-stones-menu-inner {
+              width: 100%;
+              margin: 0;
+              padding: 18px 18px 28px;
+              display: grid;
+              grid-template-columns: 1fr;
+              gap: 24px;
+            }
+
+            .natural-stones-link-grid {
+              display: grid;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 0 16px;
+            }
+
+            .natural-stone-menu-link {
+              min-height: 48px;
+              padding: 13px 0;
+              font-size: 9px;
+              line-height: 1.35;
+            }
+
+            .natural-stone-menu-link:hover,
+            .natural-stone-menu-link:focus {
+              padding-left: 0;
+            }
+
+            .natural-stones-menu-feature {
+              grid-column: 1 / -1;
+              min-height: 140px;
+            }
+
+            .banner-container {
+              height: 58vh;
+              min-height: 400px;
+              padding: 0;
+            }
+
+            .banner-video {
+              width: 145%;
+              max-width: none;
+              height: 100%;
+              object-fit: contain;
+              object-position: center;
+              transform: none;
+            }
+
+.section-title {
+              padding: 54px 16px 36px;
+            }
+
+            .section-title h2 {
+              font-size: 13px;
+              letter-spacing: 3px;
+              line-height: 1.6;
+            }
+
+            .product-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 14px 12px;
+              padding: 0 16px 64px;
+            }
+
+            .product-info {
+              font-size: 9px;
+              letter-spacing: 1px;
+              padding: 12px 0;
+            }
+
+            .home-collections {
+              padding: 30px 14px 66px;
+            }
+
+            .home-collections-heading {
+              margin-bottom: 28px;
+              padding: 0 10px;
+            }
+
+            .home-collections-heading h2 {
+              font-size: 24px;
+              letter-spacing: 2.6px;
+            }
+
+            .home-collections-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 10px;
+            }
+
+            .home-collection-image-wrap {
+              aspect-ratio: 1 / 1;
+            }
+
+            .home-collection-content {
+              left: 12px;
+              right: 12px;
+              bottom: 12px;
+            }
+
+            .home-collection-content h3 {
+              font-size: 15px;
+              letter-spacing: 0.9px;
+            }
+
+            .home-collection-link {
+              font-size: 6px;
+              letter-spacing: 1.2px;
+            }
+
+            .footer-container {
+              padding: 64px 20px 28px;
+            }
+
+            .footer-content {
+              gap: 40px;
+            }
+
+            .footer-logo-main {
+              font-size: 30px;
+              letter-spacing: 10px;
+            }
+
+            .contact-icons-container {
+              gap: 24px;
+              flex-wrap: wrap;
+              justify-content: center;
+            }
+          }
+
+          @media (max-width: 480px) {
+            main {
+              padding-top: 175px !important;
+            }
+
+            .top-bar {
+              padding: 9px 10px;
+            }
+
+            .top-link,
+            .cart-container-link span,
+            .top-right > span,
+            .account-link {
+              font-size: 8px;
+            }
+
+            .top-right > span {
+              display: inline-block;
+            }
+
+            .logo-container h1 {
+              font-size: 31px;
+              letter-spacing: 8px;
+            }
+
+            .main-nav {
+              column-gap: 10px;
+              row-gap: 10px;
+              padding: 9px 7px 15px;
+            }
+
+            .nav-item {
+              font-size: 6.2px;
+              letter-spacing: 0.4px;
+              padding: 0 1px;
+            }
+
+            .banner-container {
+              height: 54vh;
+              min-height: 360px;
+            }
+
+            .banner-video {
+              width: 165%;
+              max-width: none;
+              height: 100%;
+              object-fit: contain;
+              object-position: center;
+              transform: none;
+            }
+
+.section-title {
+              padding: 48px 14px 32px;
+            }
+
+            .section-title h2 {
+              font-size: 12px;
+              letter-spacing: 2.5px;
+            }
+
+            .product-grid {
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+              gap: 12px 10px;
+              padding: 0 12px 54px;
+            }
+
+            .home-collections {
+              padding: 26px 10px 56px;
+            }
+
+            .home-collections-kicker {
+              font-size: 6.5px;
+              letter-spacing: 2.2px;
+            }
+
+            .home-collections-heading h2 {
+              font-size: 21px;
+              letter-spacing: 2px;
+            }
+
+            .home-collections-grid {
+              gap: 8px;
+            }
+
+            .home-collection-number {
+              top: 10px;
+              left: 10px;
+              font-size: 6px;
+            }
+
+            .home-collection-content {
+              left: 10px;
+              right: 10px;
+              bottom: 10px;
+            }
+
+            .home-collection-content h3 {
+              font-size: 13px;
+              letter-spacing: 0.6px;
+            }
+
+            .home-collection-link {
+              display: none;
+            }
           }
         `}</style>
       </Router>
@@ -615,4 +3252,4 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
