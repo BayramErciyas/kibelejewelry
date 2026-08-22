@@ -338,9 +338,7 @@ const SearchResults = () => {
 
       const { data, error } = await supabase
         .from('products')
-        .select('*')
-        .eq('in_stock', true)
-        .order('created_at', { ascending: false });
+        .select('*');
 
       if (!isMounted) return;
 
@@ -363,12 +361,21 @@ const SearchResults = () => {
 
   const normalizedQuery = normalizeSearchText(query);
   const filtered = products.filter((product) => {
+    // in_stock alanı olmayan/eski ürünler de aramada görünsün.
+    // Yalnızca açıkça stok dışı işaretlenen ürünleri gizle.
+    if (product.in_stock === false) return false;
+
     const searchableText = [
       product.name,
+      product.title,
       product.name_tr,
       product.name_en,
       product.name_zh,
       product.name_es,
+      product.title_tr,
+      product.title_en,
+      product.title_zh,
+      product.title_es,
       product.nameTR,
       product.nameEN,
       product.nameZH,
@@ -382,6 +389,10 @@ const SearchResults = () => {
       product.metal,
       product.series,
       product.collection,
+      product.slug,
+      product.sku,
+      product.code,
+      ...Object.values(product),
     ]
       .filter(Boolean)
       .join(' ');
@@ -390,10 +401,10 @@ const SearchResults = () => {
   });
 
   const getProductTitle = (product) => {
-    if (lang === 'EN') return product.name_en || product.nameEN || product.name;
-    if (lang === 'ZH') return product.name_zh || product.nameZH || product.name;
-    if (lang === 'ES') return product.name_es || product.name;
-    return product.name_tr || product.nameTR || product.name;
+    if (lang === 'EN') return product.name_en || product.title_en || product.nameEN || product.name || product.title;
+    if (lang === 'ZH') return product.name_zh || product.title_zh || product.nameZH || product.name || product.title;
+    if (lang === 'ES') return product.name_es || product.title_es || product.name || product.title;
+    return product.name_tr || product.title_tr || product.nameTR || product.name || product.title;
   };
 
   return (
@@ -964,7 +975,7 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
 
   const handleSearch = (e) => {
     if (e.key === 'Enter' && query.trim() !== "") {
-      navigate(`/search?q=${query}`);
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
       setIsSearchOpen(false);
       setQuery("");
     }
@@ -1607,7 +1618,7 @@ function App() {
           .lang-switcher span.active { opacity: 1; font-weight: bold; }
           .search-trigger { display: flex; align-items: center; cursor: pointer; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
           .search-input-wrapper { display: flex; align-items: center; border-bottom: 1px solid #000; padding-bottom: 2px; }
-          .search-input-wrapper input { border: none; font-size: 11px; padding: 0 5px; width: 120px; letter-spacing: 1px; background: transparent; }
+          .search-input-wrapper input { border: none; font-size: 11px; padding: 0 5px; width: 120px; letter-spacing: 1px; background: transparent; text-transform: none; }
           
           .cart-container-link { display: flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer; }
           .cart-container-link span { font-size: 11px; letter-spacing: 1px; }
