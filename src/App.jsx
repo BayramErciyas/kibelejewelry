@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate 
 import AdminLogin from "./AdminLogin";
 import AdminDashboard from "./AdminDashboard";
 import Account from "./Account";
+import { supabase } from './supabaseClient';
 // Görsel Importları
 import zultanitering from './zultanitering.jpg'; 
 import zultanitebracelet from './zultanitebracelet.jpg'; 
@@ -315,39 +316,116 @@ const Cart = () => {
 };
 
 const SearchResults = () => {
-  const { t } = useContext(LanguageContext);
+  const { t, lang, formatPrice } = useContext(LanguageContext);
   const location = useLocation();
-  const query = new URLSearchParams(location.search).get('q')?.toLowerCase() || "";
+  const query = new URLSearchParams(location.search).get('q')?.trim() || "";
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const allProducts = [
-    { id: 1, title: "Zultanite Ring", category: "Jewellery", img: zultanitering },
-    { id: 2, title: "Zultanite Bracelet", category: "Jewellery", img: zultanitebracelet },
-    { id: 3, title: "Silver Necklace", category: "Jewellery", img: necklace },
-    { id: 4, title: "Telkari Masterpiece", category: "Telkari", img: telkariImg },
-    { id: 5, title: "Classic Watch", category: "Watches", img: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=600&h=800' },
-    { id: 6, title: "Leather Bag", category: "Bags", img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&h=800' },
-  ];
+  const normalizeSearchText = (value) =>
+    String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/ı/g, 'i')
+      .trim();
 
-  const filtered = allProducts.filter(p => 
-    p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query)
-  );
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProducts = async () => {
+      setIsLoading(true);
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('in_stock', true)
+        .order('created_at', { ascending: false });
+
+      if (!isMounted) return;
+
+      if (error) {
+        console.error('Arama ürünleri yüklenemedi:', error);
+        setProducts([]);
+      } else {
+        setProducts(data || []);
+      }
+
+      setIsLoading(false);
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const normalizedQuery = normalizeSearchText(query);
+  const filtered = products.filter((product) => {
+    const searchableText = [
+      product.name,
+      product.name_tr,
+      product.name_en,
+      product.name_zh,
+      product.name_es,
+      product.nameTR,
+      product.nameEN,
+      product.nameZH,
+      product.description,
+      product.description_tr,
+      product.description_en,
+      product.description_zh,
+      product.description_es,
+      product.category,
+      product.stone,
+      product.metal,
+      product.series,
+      product.collection,
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    return normalizeSearchText(searchableText).includes(normalizedQuery);
+  });
+
+  const getProductTitle = (product) => {
+    if (lang === 'EN') return product.name_en || product.nameEN || product.name;
+    if (lang === 'ZH') return product.name_zh || product.nameZH || product.name;
+    if (lang === 'ES') return product.name_es || product.name;
+    return product.name_tr || product.nameTR || product.name;
+  };
 
   return (
     <div className="search-page-absolute">
       <div className="section-title">
         <span className="search-meta-label">{t.search.toUpperCase()}</span>
-        <h2>"{query.toUpperCase()}"</h2>
+        <h2>"{query}"</h2>
         <div className="title-line"></div>
-        <p className="search-stats-info">{filtered.length} {t.results}</p>
+        <p className="search-stats-info">
+          {isLoading ? '...' : filtered.length} {t.results}
+        </p>
       </div>
       
       <div className="search-content-viewport">
-        {filtered.length > 0 ? (
+        {isLoading ? (
+          <div className="empty-state-lux">
+            <p>...</p>
+          </div>
+        ) : filtered.length > 0 ? (
           <div className="product-grid">
             {filtered.map(item => (
               <div key={item.id} className="product-card">
-                <div className="img-wrapper"><img src={item.img} alt={item.title} /></div>
-                <div className="product-info"><span>{item.title}</span></div>
+                <div className="img-wrapper">
+                  <img
+                    src={item.image_url || item.image || item.img}
+                    alt={getProductTitle(item)}
+                  />
+                </div>
+                <div className="product-info">
+                  <span>{getProductTitle(item)}</span>
+                  {item.price != null && <small>{formatPrice(item.price)}</small>}
+                </div>
               </div>
             ))}
           </div>
@@ -1529,7 +1607,7 @@ function App() {
           .lang-switcher span.active { opacity: 1; font-weight: bold; }
           .search-trigger { display: flex; align-items: center; cursor: pointer; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
           .search-input-wrapper { display: flex; align-items: center; border-bottom: 1px solid #000; padding-bottom: 2px; }
-          .search-input-wrapper input { border: none; font-size: 11px; padding: 0 5px; width: 120px; text-transform: uppercase; letter-spacing: 1px; background: transparent; }
+          .search-input-wrapper input { border: none; font-size: 11px; padding: 0 5px; width: 120px; letter-spacing: 1px; background: transparent; }
           
           .cart-container-link { display: flex; align-items: center; gap: 8px; text-decoration: none; cursor: pointer; }
           .cart-container-link span { font-size: 11px; letter-spacing: 1px; }
