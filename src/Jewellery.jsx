@@ -442,7 +442,6 @@ const Jewellery = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('in_stock', true)
         .order('created_at', { ascending: false });
 
       if (!isMounted) return;
@@ -601,6 +600,8 @@ const Jewellery = () => {
   };
 
   const filteredProducts = initialProducts.filter((product) => {
+    if (product.in_stock === false) return false;
+
     const productCategory = normalizeCategory(product.category);
     const productStone = normalizeStone(product.stone);
     const productMetal = normalizeMetal(product.metal);

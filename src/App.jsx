@@ -3,6 +3,7 @@ import React, { useState, createContext, useContext, useEffect, useRef } from 'r
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import AdminLogin from "./AdminLogin";
 import AdminDashboard from "./AdminDashboard";
+import ResetPassword from "./ResetPassword";
 import Account from "./Account";
 import { supabase } from './supabaseClient';
 // Görsel Importları
@@ -915,6 +916,9 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
   const [jewelleryMenuOpen, setJewelleryMenuOpen] = useState(false);
   const [naturalStonesMenuOpen, setNaturalStonesMenuOpen] = useState(false);
   const [cappadociaMenuOpen, setCappadociaMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [mobileJewelleryCategory, setMobileJewelleryCategory] = useState("");
   const menuText = jewellerySubmenuCopy[lang] || jewellerySubmenuCopy.EN;
   const naturalStoneItems =
     naturalStoneMenuCopy[lang] || naturalStoneMenuCopy.TR;
@@ -954,9 +958,83 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
     balloon: "Balon",
     evilEye: "Nazar",
   };
+  const mobileJewelleryCategories = [
+    { value: 'rings', label: value.t.ringsMenu },
+    { value: 'necklaces', label: value.t.necklacesMenu },
+    { value: 'earrings', label: value.t.earringsMenu },
+    { value: 'bracelets', label: value.t.braceletsMenu },
+    { value: 'charms', label: value.t.charmsMenu },
+  ];
+  const mobileStoneChoices = {
+    TR: [
+      ['zultanite', 'Zultanite'], ['paraiba', 'Turmalin Paraiba'],
+      ['citrine', 'Sitrin'], ['moissanite', 'Mozanit'],
+      ['aquamarine', 'Akuamarin'], ['pink-quartz', 'Pink Quartz'],
+    ],
+    EN: [
+      ['zultanite', 'Zultanite'], ['paraiba', 'Paraiba Tourmaline'],
+      ['citrine', 'Citrine'], ['moissanite', 'Moissanite'],
+      ['aquamarine', 'Aquamarine'], ['pink-quartz', 'Pink Quartz'],
+    ],
+    ZH: [
+      ['zultanite', '苏丹石'], ['paraiba', '帕拉伊巴碧玺'],
+      ['citrine', '黄水晶'], ['moissanite', '莫桑石'],
+      ['aquamarine', '海蓝宝石'], ['pink-quartz', '粉晶'],
+    ],
+    ES: [
+      ['zultanite', 'Zultanita'], ['paraiba', 'Turmalina Paraíba'],
+      ['citrine', 'Citrino'], ['moissanite', 'Moissanita'],
+      ['aquamarine', 'Aguamarina'], ['pink-quartz', 'Cuarzo rosa'],
+    ],
+  }[lang] || [];
   const navigate = useNavigate();
   const location = useLocation();
   const menuCloseTimer = useRef(null);
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setJewelleryMenuOpen(false);
+    setNaturalStonesMenuOpen(false);
+    setCappadociaMenuOpen(false);
+    setMobileJewelleryCategory("");
+  };
+
+  const closeMobileSearch = () => {
+    setMobileSearchOpen(false);
+  };
+
+  const handleMobileNavigate = (target) => {
+    closeMobileMenu();
+    closeMobileSearch();
+    navigate(target);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }));
+  };
+
+  useEffect(() => {
+    closeMobileMenu();
+    closeMobileSearch();
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen && !mobileSearchOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const closeWithEscape = (event) => {
+      if (event.key === 'Escape') {
+        closeMobileMenu();
+        closeMobileSearch();
+      }
+    };
+
+    document.addEventListener('keydown', closeWithEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [mobileMenuOpen, mobileSearchOpen]);
 
   useEffect(() => {
     const controlNavbar = () => {
@@ -979,6 +1057,16 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
       setIsSearchOpen(false);
       setQuery("");
     }
+  };
+
+  const handleMobileSearchSubmit = (event) => {
+    event.preventDefault();
+
+    if (!query.trim()) return;
+
+    navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    setQuery("");
+    closeMobileSearch();
   };
 
   const isMobileNavigation = () =>
@@ -1123,18 +1211,37 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
     </svg>
   );
 
+  const MobileSubmenuChevron = () => (
+    <span className="mobile-submenu-arrow" aria-hidden="true">
+      <svg viewBox="0 0 14 8" focusable="false">
+        <path d="M1.5 1.25 7 6.5l5.5-5.25" />
+      </svg>
+    </span>
+  );
+
+  const MobileSubmenuHeader = ({ title, onBack }) => (
+    <div className="mobile-submenu-page-header">
+      <button type="button" className="mobile-submenu-back" onClick={onBack}>
+        <svg viewBox="0 0 12 20" aria-hidden="true"><path d="m9.5 2-7 8 7 8" /></svg>
+        <span>Geri</span>
+      </button>
+      <strong>{title}</strong>
+      <button type="button" className="mobile-submenu-close" onClick={closeMobileMenu} aria-label="Menüyü kapat">
+        <span></span><span></span>
+      </button>
+    </div>
+  );
+
   return (
     <header className={showHeader ? 'header-visible' : 'header-hidden'}>
       <div className="top-bar">
         <div className="top-left">
           <button
-            className="mobile-menu-icon"
+            className={`mobile-menu-icon ${mobileMenuOpen ? 'open' : ''}`}
             type="button"
-            aria-label="Menu"
-            onClick={() => {
-              const nav = document.querySelector('.main-nav');
-              if (nav) nav.classList.toggle('mobile-nav-open');
-            }}
+            aria-label={mobileMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((current) => !current)}
           >
             <span></span>
             <span></span>
@@ -1168,6 +1275,20 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
           </div>
         </div>
         <div className="top-right">
+          <button
+            type="button"
+            className="mobile-search-button"
+            aria-label={value.t.search}
+            onClick={() => {
+              closeMobileMenu();
+              setMobileSearchOpen(true);
+            }}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 4.2 4.2"></path>
+            </svg>
+          </button>
           <Link to="/cart" className="cart-container-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
             <span>{value.t.cart} ({value.cart.length})</span>
@@ -1197,7 +1318,7 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
             aria-haspopup="true"
           >
             <span>{value.t.jewelleryMenu}</span>
-            <span className="mobile-submenu-arrow" aria-hidden="true">⌄</span>
+            <MobileSubmenuChevron />
           </Link>
 
           <div
@@ -1276,7 +1397,7 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
             aria-haspopup="true"
           >
             <span>{value.t.naturalStones || extraMenuText.naturalStones}</span>
-            <span className="mobile-submenu-arrow" aria-hidden="true">⌄</span>
+            <MobileSubmenuChevron />
           </Link>
 
           <div
@@ -1326,7 +1447,7 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
             aria-haspopup="true"
           >
             <span>{value.t.cappadociaSeries || extraMenuText.cappadociaSeries}</span>
-            <span className="mobile-submenu-arrow" aria-hidden="true">⌄</span>
+            <MobileSubmenuChevron />
           </Link>
 
           <div
@@ -1376,6 +1497,187 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
         <Link className="nav-item" to="/bags">{value.t.bagsAccessories}</Link>
         <Link className="nav-item" to="/">{value.t.home}</Link>
       </nav>
+
+      <div
+        className={`mobile-drawer-overlay ${mobileMenuOpen ? 'open' : ''}`}
+        onClick={closeMobileMenu}
+        aria-hidden="true"
+      />
+
+      <aside
+        className={`mobile-navigation-drawer ${mobileMenuOpen ? 'open' : ''}`}
+        aria-hidden={!mobileMenuOpen}
+      >
+        <div className="mobile-drawer-header">
+          <span className="mobile-drawer-brand">KIBELE</span>
+          <button type="button" onClick={closeMobileMenu} aria-label="Menüyü kapat">
+            <span></span><span></span>
+          </button>
+        </div>
+
+        <nav className="mobile-drawer-nav" aria-label="Mobil menü">
+          <div className={`mobile-drawer-group ${jewelleryMenuOpen ? 'open' : ''}`}>
+            <button
+              type="button"
+              className="mobile-drawer-trigger"
+              onClick={() => {
+                setJewelleryMenuOpen((current) => !current);
+                setNaturalStonesMenuOpen(false);
+                setCappadociaMenuOpen(false);
+              }}
+              aria-expanded={jewelleryMenuOpen}
+            >
+              <span>{value.t.jewelleryMenu}</span><MobileSubmenuChevron />
+            </button>
+            <div className="mobile-drawer-submenu">
+              <MobileSubmenuHeader title={value.t.jewelleryMenu} onBack={() => setJewelleryMenuOpen(false)} />
+              <button type="button" className="mobile-submenu-link" onClick={() => handleMobileNavigate('/jewellery')}>
+                {value.t.allJewelleryMenu}
+              </button>
+              {mobileJewelleryCategories.map((categoryItem) => (
+                <button
+                  key={categoryItem.value}
+                  type="button"
+                  className="mobile-category-next"
+                  onClick={() => setMobileJewelleryCategory(categoryItem.value)}
+                >
+                  <span>{categoryItem.label}</span><span className="mobile-link-arrow">→</span>
+                </button>
+              ))}
+
+              <div className={`mobile-category-page ${mobileJewelleryCategory ? 'open' : ''}`}>
+                <MobileSubmenuHeader
+                  title={mobileJewelleryCategories.find((item) => item.value === mobileJewelleryCategory)?.label || value.t.jewelleryMenu}
+                  onBack={() => setMobileJewelleryCategory("")}
+                />
+                {mobileJewelleryCategory && (
+                  <>
+                    <button type="button" className="mobile-submenu-link" onClick={() => handleMobileNavigate(`/jewellery?category=${mobileJewelleryCategory}`)}>
+                      {value.t.allJewelleryMenu}
+                    </button>
+                    {mobileStoneChoices.map(([stoneValue, stoneLabel]) => (
+                      <button
+                        key={stoneValue}
+                        type="button"
+                        className="mobile-submenu-link"
+                        onClick={() => handleMobileNavigate(`/jewellery?category=${mobileJewelleryCategory}&stone=${stoneValue}`)}
+                      >
+                        {stoneLabel}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button type="button" className="mobile-drawer-link" onClick={() => handleMobileNavigate('/jewellery?stone=zultanite')}>
+            <span>{value.t.jewellery}</span><span className="mobile-link-arrow">→</span>
+          </button>
+
+          <div className={`mobile-drawer-group ${naturalStonesMenuOpen ? 'open' : ''}`}>
+            <button
+              type="button"
+              className="mobile-drawer-trigger"
+              onClick={() => {
+                setNaturalStonesMenuOpen((current) => !current);
+                setJewelleryMenuOpen(false);
+                setCappadociaMenuOpen(false);
+              }}
+              aria-expanded={naturalStonesMenuOpen}
+            >
+              <span>{value.t.naturalStones || extraMenuText.naturalStones}</span><MobileSubmenuChevron />
+            </button>
+            <div className="mobile-drawer-submenu mobile-stones-submenu">
+              <MobileSubmenuHeader
+                title={value.t.naturalStones || extraMenuText.naturalStones}
+                onBack={() => setNaturalStonesMenuOpen(false)}
+              />
+              {naturalStoneItems.map((stone) => (
+                <button key={stone.slug} type="button" className="mobile-submenu-link" onClick={() => handleMobileNavigate(`/jewellery?stone=${stone.slug}`)}>
+                  {stone.label}
+                </button>
+              ))}
+              <button type="button" className="mobile-submenu-link mobile-view-all" onClick={() => handleMobileNavigate('/jewellery?collection=natural-stones')}>
+                {extraMenuText.allNaturalStones}
+              </button>
+            </div>
+          </div>
+
+          <div className={`mobile-drawer-group ${cappadociaMenuOpen ? 'open' : ''}`}>
+            <button
+              type="button"
+              className="mobile-drawer-trigger"
+              onClick={() => {
+                setCappadociaMenuOpen((current) => !current);
+                setJewelleryMenuOpen(false);
+                setNaturalStonesMenuOpen(false);
+              }}
+              aria-expanded={cappadociaMenuOpen}
+            >
+              <span>{value.t.cappadociaSeries || extraMenuText.cappadociaSeries}</span><MobileSubmenuChevron />
+            </button>
+            <div className="mobile-drawer-submenu">
+              <MobileSubmenuHeader
+                title={value.t.cappadociaSeries || extraMenuText.cappadociaSeries}
+                onBack={() => setCappadociaMenuOpen(false)}
+              />
+              <button type="button" className="mobile-submenu-link" onClick={() => handleMobileNavigate('/jewellery?series=balloon')}>{value.t.balloon || extraMenuText.balloon}</button>
+              <button type="button" className="mobile-submenu-link" onClick={() => handleMobileNavigate('/jewellery?series=nazar')}>{value.t.evilEye || extraMenuText.evilEye}</button>
+              <button type="button" className="mobile-submenu-link mobile-view-all" onClick={() => handleMobileNavigate('/jewellery?series=cappadocia')}>
+                {value.t.discoverCappadocia || extraMenuText.cappadociaSeries}
+              </button>
+            </div>
+          </div>
+
+          <button type="button" className="mobile-drawer-link" onClick={() => handleMobileNavigate('/gold')}><span>{value.t.gold}</span><span className="mobile-link-arrow">→</span></button>
+          <button type="button" className="mobile-drawer-link" onClick={() => handleMobileNavigate('/watches')}><span>{value.t.watches}</span><span className="mobile-link-arrow">→</span></button>
+          <button type="button" className="mobile-drawer-link" onClick={() => handleMobileNavigate('/bags')}><span>{value.t.bagsAccessories}</span><span className="mobile-link-arrow">→</span></button>
+          <button type="button" className="mobile-drawer-link" onClick={() => handleMobileNavigate('/')}><span>{value.t.home}</span><span className="mobile-link-arrow">→</span></button>
+        </nav>
+
+        <div className="mobile-drawer-footer">
+          <button type="button" className="mobile-footer-link" onClick={() => handleMobileNavigate('/account')}>{value.t.account}</button>
+          <button type="button" className="mobile-footer-link" onClick={() => handleMobileNavigate('/store')}>{value.t.findStore}</button>
+          <div className="mobile-drawer-languages">
+            {['EN', 'TR', 'ZH', 'ES'].map((language) => (
+              <button
+                key={language}
+                type="button"
+                className={lang === language ? 'active' : ''}
+                onClick={() => setLang(language)}
+              >
+                {language}
+              </button>
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      <section className={`mobile-search-panel ${mobileSearchOpen ? 'open' : ''}`} aria-hidden={!mobileSearchOpen}>
+        <div className="mobile-search-header">
+          <span>{value.t.search}</span>
+          <button type="button" onClick={closeMobileSearch} aria-label="Aramayı kapat">
+            <span></span><span></span>
+          </button>
+        </div>
+        <form className="mobile-search-form" onSubmit={handleMobileSearchSubmit}>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="10.8" cy="10.8" r="6.8"></circle>
+            <path d="m16 16 4.2 4.2"></path>
+          </svg>
+          <input
+            key={mobileSearchOpen ? 'mobile-search-open' : 'mobile-search-closed'}
+            type="search"
+            placeholder={value.t.searchPlaceholder}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            autoFocus={mobileSearchOpen}
+          />
+          <button type="submit" disabled={!query.trim()}>{value.t.search}</button>
+        </form>
+        <p className="mobile-search-hint">{value.t.jewelleryMenu} · {value.t.naturalStones} · {value.t.cappadociaSeries}</p>
+      </section>
     </header>
   );
 };
@@ -1569,6 +1871,7 @@ function App() {
               <Route path="/watches" element={<Watches />} />
               <Route path="/bags" element={<Bags />} />
               <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/reset-password" element={<ResetPassword />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
             </Routes>
           </main>
@@ -1827,6 +2130,13 @@ function App() {
             height: 1px;
             background: #000;
             margin: 3px auto;
+          }
+
+          .mobile-drawer-overlay,
+          .mobile-navigation-drawer,
+          .mobile-search-button,
+          .mobile-search-panel {
+            display: none;
           }
 
           /* BİLDİRİM TOAST CSS */
@@ -2893,18 +3203,21 @@ function App() {
 
 @media (max-width: 768px) {
             main {
-              padding-top: 175px !important;
+              padding-top: 62px !important;
             }
 
             header {
               background: rgba(255,255,255,0.98);
+              min-height: 62px;
+              border-bottom: 1px solid rgba(17,17,17,.1);
             }
 
             .top-bar {
-              padding: 10px 12px;
-              min-height: 48px;
-              gap: 6px;
-              overflow: hidden;
+              position: relative;
+              min-height: 62px;
+              padding: 0 16px;
+              border-bottom: 0;
+              overflow: visible;
             }
 
             .top-left,
@@ -2915,17 +3228,86 @@ function App() {
             }
 
             .top-left {
-              flex: 1 1 auto;
-              justify-content: flex-start;
+              position: static;
             }
 
             .top-right {
-              margin-left: auto;
-              justify-content: flex-end;
+              position: absolute;
+              right: 15px;
+              top: 50%;
+              margin: 0;
+              display: flex;
+              align-items: center;
+              gap: 13px;
+              transform: translateY(-50%);
             }
 
             .mobile-menu-icon {
-              display: block;
+              position: absolute;
+              top: 50%;
+              left: 15px;
+              z-index: 3100;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              width: 30px;
+              height: 30px;
+              padding: 6px;
+              transform: translateY(-50%);
+            }
+
+            .mobile-menu-icon span {
+              width: 17px;
+              margin: 2.5px auto;
+              transition: transform .3s ease, opacity .2s ease;
+            }
+
+            .mobile-menu-icon.open {
+              opacity: 0;
+              pointer-events: none;
+            }
+
+            .top-left > :not(.mobile-menu-icon),
+            .top-right .account-link,
+            .top-right > span,
+            .top-right .cart-container-link span {
+              display: none !important;
+            }
+
+            .mobile-search-button {
+              width: 28px;
+              height: 28px;
+              padding: 4px;
+              border: 0;
+              background: transparent;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              color: #111;
+              cursor: pointer;
+            }
+
+            .mobile-search-button svg {
+              width: 18px;
+              height: 18px;
+              fill: none;
+              stroke: currentColor;
+              stroke-width: 1.35;
+              stroke-linecap: round;
+            }
+
+            .top-right .cart-container-link {
+              min-width: 25px;
+              min-height: 28px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+            }
+
+            .top-right .cart-container-link svg {
+              width: 17px;
+              height: 17px;
             }
 
             .top-link,
@@ -2938,8 +3320,7 @@ function App() {
             }
 
             .lang-switcher {
-              display: flex;
-              white-space: nowrap;
+              display: none;
             }
 
             .lang-switcher span {
@@ -2952,27 +3333,488 @@ function App() {
             }
 
             .logo-container {
-              padding: 18px 0 10px;
+              position: absolute;
+              top: 0;
+              left: 50%;
+              z-index: 2;
+              height: 62px;
+              padding: 0;
+              display: flex;
+              align-items: center;
+              transform: translateX(-50%);
             }
 
             .logo-container h1 {
-              font-size: 34px;
-              letter-spacing: 10px;
+              margin-left: 7px;
+              font-size: 25px;
+              letter-spacing: 7px;
               white-space: nowrap;
             }
 
             .main-nav {
-              position: relative;
+              display: none !important;
+            }
+
+            .mobile-drawer-overlay {
+              display: block;
+              position: fixed;
+              inset: 0;
+              z-index: 2990;
+              background: rgba(12, 12, 12, .28);
+              opacity: 0;
+              visibility: hidden;
+              pointer-events: none;
+              backdrop-filter: blur(2px);
+              transition: opacity .35s ease, visibility .35s ease;
+            }
+
+            .mobile-drawer-overlay.open {
+              opacity: 1;
+              visibility: visible;
+              pointer-events: auto;
+            }
+
+            .mobile-navigation-drawer {
               display: flex;
-              flex-wrap: wrap;
-              justify-content: center;
+              position: fixed;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              z-index: 3000;
+              width: 100vw;
+              max-width: none;
+              height: 100dvh;
+              flex-direction: column;
+              background: #fff;
+              box-shadow: none;
+              transform: translateX(-105%);
+              transition: transform .42s cubic-bezier(.22, 1, .36, 1);
+              overflow: hidden;
+            }
+
+            .mobile-navigation-drawer.open {
+              transform: translateX(0);
+            }
+
+            .mobile-drawer-header {
+              min-height: 70px;
+              padding: 0 20px 0 24px;
+              border-bottom: 1px solid #e8e6e1;
+              display: flex;
               align-items: center;
-              column-gap: 17px;
-              row-gap: 11px;
-              padding: 10px 10px 16px;
+              justify-content: space-between;
+            }
+
+            .mobile-drawer-brand {
+              margin-left: 5px;
+              font-family: Georgia, 'Times New Roman', serif;
+              font-size: 23px;
+              letter-spacing: 7px;
+            }
+
+            .mobile-search-panel {
+              position: fixed;
+              inset: 0;
+              z-index: 3200;
+              width: 100vw;
+              height: 100dvh;
+              padding: 0 24px;
+              box-sizing: border-box;
+              background: #fff;
+              display: block;
+              opacity: 0;
+              visibility: hidden;
+              pointer-events: none;
+              transform: translateY(-12px);
+              transition: opacity .28s ease, transform .38s cubic-bezier(.22,1,.36,1), visibility .28s ease;
+            }
+
+            .mobile-search-panel.open {
+              opacity: 1;
+              visibility: visible;
+              pointer-events: auto;
+              transform: translateY(0);
+            }
+
+            .mobile-search-header {
+              min-height: 70px;
+              border-bottom: 1px solid #e8e6e1;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              color: #171715;
+              font-size: 9px;
+              font-weight: 600;
+              letter-spacing: 2.2px;
+              text-transform: uppercase;
+            }
+
+            .mobile-search-header button {
+              position: relative;
+              width: 34px;
+              height: 34px;
+              border: 0;
+              background: transparent;
+              cursor: pointer;
+            }
+
+            .mobile-search-header button span {
+              position: absolute;
+              top: 50%;
+              left: 8px;
+              width: 19px;
+              height: 1px;
+              background: #111;
+            }
+
+            .mobile-search-header button span:first-child { transform: rotate(45deg); }
+            .mobile-search-header button span:last-child { transform: rotate(-45deg); }
+
+            .mobile-search-form {
+              margin-top: clamp(70px, 16vh, 145px);
+              padding-bottom: 13px;
+              border-bottom: 1px solid #171715;
+              display: grid;
+              grid-template-columns: 25px 1fr auto;
+              align-items: center;
+              gap: 12px;
+            }
+
+            .mobile-search-form > svg {
+              width: 20px;
+              height: 20px;
+              fill: none;
+              stroke: #111;
+              stroke-width: 1.25;
+              stroke-linecap: round;
+            }
+
+            .mobile-search-form input {
               width: 100%;
-              overflow: visible;
-              border-top: 1px solid #f7f7f7;
+              border: 0;
+              outline: 0;
+              background: transparent;
+              color: #111;
+              font-family: Georgia, 'Times New Roman', serif;
+              font-size: clamp(23px, 7vw, 34px);
+              font-weight: 400;
+            }
+
+            .mobile-search-form input::placeholder {
+              color: #aaa69f;
+            }
+
+            .mobile-search-form button {
+              border: 0;
+              background: transparent;
+              color: #111;
+              padding: 9px 0 9px 12px;
+              font-size: 8px;
+              font-weight: 700;
+              letter-spacing: 1.5px;
+              text-transform: uppercase;
+              cursor: pointer;
+            }
+
+            .mobile-search-form button:disabled {
+              opacity: .3;
+            }
+
+            .mobile-search-hint {
+              margin: 20px 0 0 37px;
+              color: #8b8781;
+              font-size: 8px;
+              line-height: 1.7;
+              letter-spacing: .5px;
+            }
+
+            .mobile-drawer-header button {
+              position: relative;
+              width: 34px;
+              height: 34px;
+              border: 0;
+              background: transparent;
+              cursor: pointer;
+            }
+
+            .mobile-drawer-header button span {
+              position: absolute;
+              top: 50%;
+              left: 8px;
+              width: 19px;
+              height: 1px;
+              background: #111;
+            }
+
+            .mobile-drawer-header button span:first-child { transform: rotate(45deg); }
+            .mobile-drawer-header button span:last-child { transform: rotate(-45deg); }
+
+            .mobile-drawer-nav {
+              flex: 1;
+              overflow-y: auto;
+              overscroll-behavior: contain;
+              padding: 13px 24px 30px;
+            }
+
+            .mobile-drawer-link,
+            .mobile-drawer-trigger {
+              width: 100%;
+              min-height: 59px;
+              padding: 0;
+              border: 0;
+              border-bottom: 1px solid #eceae6;
+              background: transparent;
+              color: #171715 !important;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 15.5px;
+              font-weight: 400;
+              letter-spacing: .05px;
+              text-align: left;
+              text-decoration: none !important;
+              cursor: pointer;
+            }
+
+            .mobile-link-arrow {
+              position: relative;
+              flex: 0 0 26px;
+              width: 26px;
+              height: 26px;
+              margin: 0;
+              border: 0;
+              color: transparent !important;
+              font-size: 0;
+              transform: none;
+            }
+
+            .mobile-link-arrow::before {
+              content: "";
+              position: absolute;
+              top: 9px;
+              left: 8px;
+              width: 7px;
+              height: 7px;
+              border-top: 1px solid #5f5d59;
+              border-right: 1px solid #5f5d59;
+              transform: rotate(45deg);
+            }
+
+            .mobile-drawer-trigger .mobile-submenu-arrow {
+              display: inline-flex;
+              flex: 0 0 26px;
+              width: 26px;
+              height: 26px;
+              margin: 0;
+              color: #77736d;
+              transform: rotate(-90deg);
+            }
+
+            .mobile-drawer-group.open .mobile-drawer-trigger .mobile-submenu-arrow {
+              color: #111;
+              transform: rotate(0deg);
+            }
+
+            .mobile-drawer-trigger .mobile-submenu-arrow svg {
+              width: 10px;
+              height: 7px;
+            }
+
+            .mobile-drawer-submenu {
+              position: absolute;
+              inset: 0;
+              z-index: 20;
+              max-height: none;
+              padding: 0 24px 35px;
+              box-sizing: border-box;
+              overflow-y: auto;
+              display: block;
+              background: #fff;
+              opacity: 1;
+              visibility: hidden;
+              pointer-events: none;
+              transform: translateX(100%);
+              transition: transform .42s cubic-bezier(.22, 1, .36, 1), visibility .42s ease;
+            }
+
+            .mobile-drawer-group.open .mobile-drawer-submenu {
+              max-height: none;
+              padding: 0 24px 35px;
+              visibility: visible;
+              pointer-events: auto;
+              transform: translateX(0);
+            }
+
+            .mobile-drawer-submenu a,
+            .mobile-submenu-link,
+            .mobile-category-next {
+              width: 100%;
+              min-height: 64px;
+              border-bottom: 1px solid #eceae6;
+              border-top: 0;
+              border-left: 0;
+              border-right: 0;
+              padding: 0;
+              background: transparent;
+              color: #171715 !important;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              font-size: 15px;
+              font-family: Arial, Helvetica, sans-serif;
+              line-height: 1.35;
+              letter-spacing: .05px;
+              text-align: left;
+              text-decoration: none !important;
+              cursor: pointer;
+            }
+
+            .mobile-category-page {
+              position: absolute;
+              inset: 0;
+              z-index: 30;
+              min-height: 100%;
+              padding: 0 24px 35px;
+              box-sizing: border-box;
+              overflow-y: auto;
+              background: #fff;
+              visibility: hidden;
+              pointer-events: none;
+              transform: translateX(100%);
+              transition: transform .42s cubic-bezier(.22, 1, .36, 1), visibility .42s ease;
+            }
+
+            .mobile-category-page.open {
+              visibility: visible;
+              pointer-events: auto;
+              transform: translateX(0);
+            }
+
+            .mobile-drawer-submenu .mobile-view-all {
+              grid-column: 1 / -1;
+              margin-top: 0;
+              border-bottom: 1px solid #eceae6;
+              color: #111 !important;
+              font-size: 15px;
+              font-weight: 400;
+              letter-spacing: .05px;
+              text-transform: none;
+            }
+
+            .mobile-submenu-page-header {
+              position: sticky;
+              top: 0;
+              z-index: 2;
+              min-height: 70px;
+              margin: 0 -24px;
+              padding: 0 20px;
+              border-bottom: 1px solid #e8e6e1;
+              background: rgba(255,255,255,.98);
+              display: grid;
+              grid-template-columns: 1fr auto 1fr;
+              align-items: center;
+            }
+
+            .mobile-submenu-page-header > strong {
+              color: #171715;
+              font-size: 14px;
+              font-weight: 600;
+              letter-spacing: .1px;
+              white-space: nowrap;
+            }
+
+            .mobile-submenu-back {
+              justify-self: start;
+              min-width: 65px;
+              border: 0;
+              background: transparent;
+              padding: 8px 0;
+              display: inline-flex;
+              align-items: center;
+              gap: 7px;
+              color: #171715;
+              font-size: 11px;
+              font-weight: 600;
+              cursor: pointer;
+            }
+
+            .mobile-submenu-back svg {
+              width: 7px;
+              height: 13px;
+              fill: none;
+              stroke: currentColor;
+              stroke-width: 1.25;
+              stroke-linecap: round;
+              stroke-linejoin: round;
+            }
+
+            .mobile-submenu-close {
+              position: relative;
+              justify-self: end;
+              width: 34px;
+              height: 34px;
+              border: 0;
+              background: transparent;
+              cursor: pointer;
+            }
+
+            .mobile-submenu-close span {
+              position: absolute;
+              top: 50%;
+              left: 8px;
+              width: 19px;
+              height: 1px;
+              background: #111;
+            }
+
+            .mobile-submenu-close span:first-child { transform: rotate(45deg); }
+            .mobile-submenu-close span:last-child { transform: rotate(-45deg); }
+
+            .mobile-drawer-footer {
+              padding: 18px 24px 20px;
+              border-top: 1px solid #e8e6e1;
+              background: #f7f6f3;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 14px 18px;
+            }
+
+            .mobile-drawer-footer > a,
+            .mobile-footer-link {
+              padding: 0;
+              border: 0;
+              background: transparent;
+              color: #403d39 !important;
+              font-size: 9px;
+              font-family: inherit;
+              text-align: left;
+              cursor: pointer;
+              letter-spacing: .6px;
+              text-decoration: none !important;
+            }
+
+            .mobile-drawer-languages {
+              grid-column: 1 / -1;
+              display: flex;
+              gap: 18px;
+              padding-top: 5px;
+            }
+
+            .mobile-drawer-languages button {
+              border: 0;
+              border-bottom: 1px solid transparent;
+              background: transparent;
+              padding: 2px 0;
+              color: #85817b;
+              font-size: 9px;
+              cursor: pointer;
+            }
+
+            .mobile-drawer-languages button.active {
+              border-bottom-color: #111;
+              color: #111;
             }
 
             .nav-item {
@@ -3009,15 +3851,36 @@ function App() {
             }
 
             .mobile-submenu-arrow {
-              display: inline-block;
-              font-size: 8px;
-              line-height: 1;
-              transform: translateY(-1px);
-              transition: transform .2s ease;
+              width: 15px;
+              height: 15px;
+              margin-left: 2px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              color: rgba(17, 17, 17, .62);
+              transform: translateY(-.5px);
+              transform-origin: center;
+              transition: transform .32s cubic-bezier(.22, 1, .36, 1), color .25s ease;
+            }
+
+            .mobile-submenu-arrow svg {
+              display: block;
+              width: 9px;
+              height: 6px;
+              overflow: visible;
+            }
+
+            .mobile-submenu-arrow path {
+              fill: none;
+              stroke: currentColor;
+              stroke-width: 1.1;
+              stroke-linecap: round;
+              stroke-linejoin: round;
             }
 
             .mega-nav-item.open .mobile-submenu-arrow {
-              transform: translateY(1px) rotate(180deg);
+              color: #111;
+              transform: translateY(-.5px) rotate(180deg);
             }
 
             .jewellery-mega-menu {
