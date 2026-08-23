@@ -1,3 +1,5 @@
+import AdminDashboard from "./AdminDashboard";
+import ResetPassword from "./ResetPassword";
 import heroVideo from "./videos/zultanite.mp4";
 import React, { useState, createContext, useContext, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1871,6 +1873,7 @@ function App() {
               <Route path="/watches" element={<Watches />} />
               <Route path="/bags" element={<Bags />} />
               <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/reset-password" element={<ResetPassword />} />
               <Route path="/admin/reset-password" element={<ResetPassword />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
             </Routes>

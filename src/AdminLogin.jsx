@@ -9,12 +9,14 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     setLoading(true);
     setError("");
+    setMessage("");
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -29,6 +31,35 @@ export default function AdminLogin() {
     }
 
     navigate("/admin/dashboard");
+  };
+
+  const handleForgotPassword = async () => {
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      setError("Önce e-posta adresinizi yazın.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      normalizedEmail,
+      {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      }
+    );
+
+    setLoading(false);
+
+    if (resetError) {
+      setError(`Şifre yenileme bağlantısı gönderilemedi: ${resetError.message}`);
+      return;
+    }
+
+    setMessage("Şifre yenileme bağlantısı e-posta adresinize gönderildi.");
   };
 
   return (
@@ -90,12 +121,27 @@ export default function AdminLogin() {
             </div>
           )}
 
+          {message && (
+            <div className="admin-success">
+              {message}
+            </div>
+          )}
+
           <button
             type="submit"
             className="admin-login-button"
             disabled={loading}
           >
             {loading ? "GİRİŞ YAPILIYOR..." : "GİRİŞ YAP"}
+          </button>
+
+          <button
+            type="button"
+            className="admin-forgot-password"
+            onClick={handleForgotPassword}
+            disabled={loading}
+          >
+            ŞİFREMİ UNUTTUM
           </button>
 
         </form>
@@ -278,6 +324,17 @@ export default function AdminLogin() {
           color: #a33;
         }
 
+        .admin-success {
+          background: #f1f8f2;
+          border: 1px solid #cfe4d2;
+          padding: 12px;
+          margin-bottom: 18px;
+          font-size: 11px;
+          line-height: 1.5;
+          text-align: center;
+          color: #35613b;
+        }
+
         .admin-login-button {
           width: 100%;
 
@@ -310,6 +367,27 @@ export default function AdminLogin() {
         }
 
         .admin-login-button:disabled {
+          opacity: 0.55;
+          cursor: wait;
+        }
+
+        .admin-forgot-password {
+          width: 100%;
+          border: none;
+          background: transparent;
+          margin-top: 15px;
+          padding: 5px;
+          font-size: 9px;
+          letter-spacing: 1.5px;
+          cursor: pointer;
+          color: #777;
+        }
+
+        .admin-forgot-password:hover {
+          color: #111;
+        }
+
+        .admin-forgot-password:disabled {
           opacity: 0.55;
           cursor: wait;
         }
