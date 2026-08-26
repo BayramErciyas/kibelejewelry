@@ -3998,8 +3998,8 @@ function App() {
             }
 
             .banner-container {
-              height: 58vh;
-              min-height: 400px;
+              height: clamp(260px, 38vh, 340px);
+              min-height: 0;
               padding: 0;
             }
 
@@ -4095,7 +4095,7 @@ function App() {
 
           @media (max-width: 480px) {
             main {
-              padding-top: 175px !important;
+              padding-top: 62px !important;
             }
 
             .top-bar {
@@ -4131,12 +4131,12 @@ function App() {
             }
 
             .banner-container {
-              height: 54vh;
-              min-height: 360px;
+              height: clamp(240px, 34vh, 300px);
+              min-height: 0;
             }
 
             .banner-video {
-              width: 165%;
+              width: 150%;
               max-width: none;
               height: 100%;
               object-fit: contain;
