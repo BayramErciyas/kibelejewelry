@@ -456,12 +456,12 @@ const Home = () => {
   const { t } = useContext(LanguageContext);
 
   const collectionItems = [
-    { id: 1, title: t.rings, img: zultanitering },
-    { id: 2, title: t.bracelets, img: zultanitebracelet },
-    { id: 3, title: t.necklaces, img: necklace },
-    { id: 4, title: t.telkari, img: telkariImg }, 
-    { id: 5, title: t.watches, img: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=600&h=800&fit=crop' },
-    { id: 6, title: t.bagsAccessories, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&h=800&fit=crop' },
+    { id: 1, title: t.rings, img: "/categories/yuzuk.png" },
+    { id: 2, title: t.bracelets, img: "/categories/bileklik.png" },
+    { id: 3, title: t.necklaces, img: "/categories/kolye.png" },
+    { id: 4, title: t.telkari, img: "/categories/kendin-yap.png" },
+    { id: 5, title: t.watches, img: "/categories/saat.png" },
+    { id: 6, title: t.bagsAccessories, img: "/categories/canta.png" },
   ];
 
   return (
@@ -4095,7 +4095,7 @@ function App() {
 
           @media (max-width: 480px) {
             main {
-              padding-top: 62px !important;
+              padding-top: 110px !important;
             }
 
             .top-bar {
