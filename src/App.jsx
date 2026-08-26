@@ -1010,6 +1010,16 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }));
   };
 
+  const handleNaturalStoneNavigate = (event, stoneSlug) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clearMenuCloseTimer();
+    setNaturalStonesMenuOpen(false);
+    setMobileMenuOpen(false);
+    navigate(`/jewellery?stone=${stoneSlug}`);
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0 }));
+  };
+
   useEffect(() => {
     closeMobileMenu();
     closeMobileSearch();
@@ -1412,7 +1422,7 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
                     className="natural-stone-menu-link"
                     key={stone.slug}
                     to={`/jewellery?stone=${stone.slug}`}
-                    onClick={() => setNaturalStonesMenuOpen(false)}
+                    onClick={(event) => handleNaturalStoneNavigate(event, stone.slug)}
                   >
                     <span>{stone.label}</span>
                   </Link>
@@ -1594,7 +1604,12 @@ const Header = ({ value, isSearchOpen, setIsSearchOpen, lang, setLang }) => {
                 onBack={() => setNaturalStonesMenuOpen(false)}
               />
               {naturalStoneItems.map((stone) => (
-                <button key={stone.slug} type="button" className="mobile-submenu-link" onClick={() => handleMobileNavigate(`/jewellery?stone=${stone.slug}`)}>
+                <button
+                  key={stone.slug}
+                  type="button"
+                  className="mobile-submenu-link"
+                  onClick={(event) => handleNaturalStoneNavigate(event, stone.slug)}
+                >
                   {stone.label}
                 </button>
               ))}
@@ -2089,6 +2104,10 @@ function App() {
           }
 
           .natural-stone-menu-link {
+            position: relative;
+            z-index: 2;
+            pointer-events: auto;
+            cursor: pointer;
             min-height: 54px;
             padding: 15px 2px;
             border-bottom: 1px solid #ece9e2 !important;
