@@ -161,7 +161,7 @@ const jewellerySubmenuCopy = {
 const naturalStoneMenuCopy = {
   TR: [
     { slug: "aquamarine", label: "Akuamarin Taşı" },
-    { slug: "zultanite", label: "Diaspor (Zultanite)" },
+    { slug: "diaspore", label: "Diaspor (Zultanite)" },
     { slug: "diamond", label: "Elmas" },
     { slug: "opal", label: "Opal" },
     { slug: "sapphire", label: "Safir" },
@@ -175,7 +175,7 @@ const naturalStoneMenuCopy = {
   ],
   EN: [
     { slug: "aquamarine", label: "Aquamarine" },
-    { slug: "zultanite", label: "Diaspore (Zultanite)" },
+    { slug: "diaspore", label: "Diaspore (Zultanite)" },
     { slug: "diamond", label: "Diamond" },
     { slug: "opal", label: "Opal" },
     { slug: "sapphire", label: "Sapphire" },
@@ -189,7 +189,7 @@ const naturalStoneMenuCopy = {
   ],
   ZH: [
     { slug: "aquamarine", label: "海蓝宝石" },
-    { slug: "zultanite", label: "硬水铝石（苏丹石）" },
+    { slug: "diaspore", label: "硬水铝石（苏丹石）" },
     { slug: "diamond", label: "钻石" },
     { slug: "opal", label: "欧泊" },
     { slug: "sapphire", label: "蓝宝石" },
@@ -203,7 +203,7 @@ const naturalStoneMenuCopy = {
   ],
   ES: [
     { slug: "aquamarine", label: "Aguamarina" },
-    { slug: "zultanite", label: "Diásporo (Zultanita)" },
+    { slug: "diaspore", label: "Diásporo (Zultanita)" },
     { slug: "diamond", label: "Diamante" },
     { slug: "opal", label: "Ópalo" },
     { slug: "sapphire", label: "Zafiro" },

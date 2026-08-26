@@ -13,6 +13,9 @@ const normalizeKey = (value) =>
 const STONE_ALIASES = {
   zultanite: 'zultanite',
   zultanit: 'zultanite',
+  diaspore: 'diaspore',
+  diaspor: 'diaspore',
+  'natural-diaspore': 'diaspore',
   paraiba: 'paraiba',
   'turmalin-paraiba': 'paraiba',
   'tourmaline-paraiba': 'paraiba',
@@ -67,6 +70,7 @@ const CATEGORY_ALIASES = {
 
 const NATURAL_STONE_KEYS = new Set([
   'zultanite',
+  'diaspore',
   'paraiba',
   'citrine',
   'moissanite',
