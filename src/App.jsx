@@ -7,6 +7,10 @@ import ResetPassword from "./ResetPassword";
 import Account from "./Account";
 import { supabase } from './supabaseClient';
 // Görsel Importları
+import zultanitering from './zultanitering.jpg'; 
+import zultanitebracelet from './zultanitebracelet.jpg'; 
+import necklace from './necklace.jpg'; 
+import telkariImg from './telkari.jpg'; 
 
 // Sayfa Importları
 import Store from './Store';
@@ -452,12 +456,12 @@ const Home = () => {
   const { t } = useContext(LanguageContext);
 
   const collectionItems = [
-    { id: 1, title: t.rings, img: '/categories/nazar-ring.png' },
-    { id: 2, title: t.bracelets, img: '/categories/nazar-bracelet.png' },
-    { id: 3, title: t.necklaces, img: '/categories/nazar-necklace.png' },
-    { id: 4, title: t.telkari, img: '/categories/nazar-create-your-own.png' },
-    { id: 5, title: t.watches, img: '/categories/nazar-watch.png' },
-    { id: 6, title: t.bagsAccessories, img: '/categories/nazar-bag-accessories.png' },
+    { id: 1, title: t.rings, img: zultanitering },
+    { id: 2, title: t.bracelets, img: zultanitebracelet },
+    { id: 3, title: t.necklaces, img: necklace },
+    { id: 4, title: t.telkari, img: telkariImg }, 
+    { id: 5, title: t.watches, img: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=600&h=800&fit=crop' },
+    { id: 6, title: t.bagsAccessories, img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&h=800&fit=crop' },
   ];
 
   return (
