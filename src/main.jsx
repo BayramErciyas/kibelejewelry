@@ -121,6 +121,20 @@ transitionStyle.textContent = `
 document.head.appendChild(transitionStyle)
 
 const mobileCategoryRoutes = ['rings', 'necklaces', 'earrings', 'bracelets', 'charms']
+const mobileNaturalStoneRoutes = [
+  'aquamarine',
+  'diaspore',
+  'diamond',
+  'opal',
+  'sapphire',
+  'citrine',
+  'tanzanite',
+  'topaz',
+  'tourmaline',
+  'ruby',
+  'zircon',
+  'emerald',
+]
 
 const directMobileRoutes = new Map([
   ['zultanite', '/jewellery?stone=zultanite'],
@@ -241,6 +255,31 @@ const navigateToMobileCategory = (event) => {
   )
 }
 
+const navigateToMobileNaturalStone = (event) => {
+  const button = event.target.closest?.('.mobile-stones-submenu .mobile-submenu-link')
+  if (!button) return false
+
+  let targetUrl = '/jewellery?collection=natural-stones'
+
+  if (!button.classList.contains('mobile-view-all')) {
+    const stoneButtons = Array.from(
+      document.querySelectorAll(
+        '.mobile-stones-submenu .mobile-submenu-link:not(.mobile-view-all)'
+      )
+    )
+    const stoneIndex = stoneButtons.indexOf(button)
+    const stoneSlug = mobileNaturalStoneRoutes[stoneIndex]
+    if (!stoneSlug) return false
+    targetUrl = `/jewellery?stone=${encodeURIComponent(stoneSlug)}`
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
+
+  return closeMobileDrawerThenNavigate(button, targetUrl)
+}
+
 const navigateToDirectMobileSection = (event) => {
   const button = event.target.closest?.('.mobile-drawer-link')
   if (!button) return false
@@ -257,12 +296,14 @@ const navigateToDirectMobileSection = (event) => {
 }
 
 document.addEventListener('pointerup', navigateToMobileCategory, true)
+document.addEventListener('pointerup', navigateToMobileNaturalStone, true)
 document.addEventListener('pointerup', navigateToDirectMobileSection, true)
 
 document.addEventListener(
   'click',
   (event) => {
     if (navigateToMobileCategory(event)) return
+    if (navigateToMobileNaturalStone(event)) return
     if (navigateToDirectMobileSection(event)) return
 
     const target = event.target instanceof Element ? event.target : null
