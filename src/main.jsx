@@ -5,8 +5,9 @@ import './performanceOptimizer.js'
 import App from './App.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
-const SWAROVSKI_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
-const MOBILE_TRANSITION_MS = 380
+const SWAROVSKI_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
+const MOBILE_TRANSITION_MS = 560
+const MOBILE_ROUTE_DELAY_MS = 500
 
 const transitionStyle = document.createElement('style')
 transitionStyle.textContent = `
@@ -14,58 +15,69 @@ transitionStyle.textContent = `
   .mobile-navigation-drawer {
     transform: translate3d(-100%, 0, 0) !important;
     opacity: 1;
-    transition: transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE} !important;
-    will-change: transform;
+    transition:
+      transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE},
+      opacity 320ms ease !important;
+    will-change: transform, opacity;
   }
 
   .mobile-navigation-drawer.open {
     transform: translate3d(0, 0, 0) !important;
+    opacity: 1;
   }
 
   .mobile-drawer-overlay {
     opacity: 0 !important;
     visibility: hidden;
     transition:
-      opacity 300ms ease,
-      visibility 0s linear 300ms !important;
+      opacity 420ms ease,
+      visibility 0s linear 420ms !important;
   }
 
   .mobile-drawer-overlay.open {
     opacity: 1 !important;
     visibility: visible;
     transition:
-      opacity 300ms ease,
+      opacity 420ms ease,
       visibility 0s linear 0s !important;
   }
 
   .mobile-drawer-submenu {
-    transform: translate3d(100%, 0, 0) !important;
-    opacity: 1;
-    transition: transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE} !important;
-    will-change: transform;
+    transform: translate3d(92%, 0, 0) !important;
+    opacity: 0.72;
+    transition:
+      transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE},
+      opacity 420ms ease !important;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
   .mobile-drawer-group.open > .mobile-drawer-submenu {
     transform: translate3d(0, 0, 0) !important;
+    opacity: 1;
   }
 
   .mobile-category-page {
-    transform: translate3d(100%, 0, 0) !important;
-    opacity: 1 !important;
-    transition: transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE} !important;
-    will-change: transform;
+    transform: translate3d(92%, 0, 0) !important;
+    opacity: 0.72 !important;
+    transition:
+      transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE},
+      opacity 420ms ease !important;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
   .mobile-category-page.open {
     transform: translate3d(0, 0, 0) !important;
+    opacity: 1 !important;
   }
 
   .mobile-search-panel {
     transform: translate3d(0, -16px, 0);
     opacity: 0;
     transition:
-      transform 320ms ${SWAROVSKI_EASE},
-      opacity 240ms ease !important;
+      transform 420ms ${SWAROVSKI_EASE},
+      opacity 320ms ease !important;
     will-change: transform, opacity;
   }
 
@@ -79,16 +91,16 @@ transitionStyle.textContent = `
   .mobile-category-next,
   .mobile-submenu-link {
     transition:
-      opacity 180ms ease,
-      transform 180ms ease !important;
+      opacity 260ms ease,
+      transform 300ms ${SWAROVSKI_EASE} !important;
   }
 
   .mobile-drawer-link:active,
   .mobile-drawer-trigger:active,
   .mobile-category-next:active,
   .mobile-submenu-link:active {
-    opacity: .58;
-    transform: translate3d(2px, 0, 0);
+    opacity: .68;
+    transform: translate3d(1px, 0, 0) scale(.995);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -158,8 +170,6 @@ const navigateToMobileCategory = (event) => {
   const drawer = button.closest('.mobile-navigation-drawer')
   const overlay = document.querySelector('.mobile-drawer-overlay')
 
-  // Swarovski benzeri his: once drawer yumusakca kapanir,
-  // sonra React Router icinde sayfa yenilenmeden kategori degisir.
   drawer?.classList.remove('open')
   overlay?.classList.remove('open')
 
@@ -168,7 +178,7 @@ const navigateToMobileCategory = (event) => {
   mobileNavigationTimer = window.setTimeout(() => {
     navigateWithoutReload(targetUrl)
     mobileNavigationTimer = null
-  }, 300)
+  }, MOBILE_ROUTE_DELAY_MS)
 
   return true
 }
