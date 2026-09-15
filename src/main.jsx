@@ -122,6 +122,26 @@ document.head.appendChild(transitionStyle)
 
 const mobileCategoryRoutes = ['rings', 'necklaces', 'earrings', 'bracelets', 'charms']
 
+const directMobileRoutes = new Map([
+  ['zultanite', '/jewellery?stone=zultanite'],
+  ['altın', '/gold'],
+  ['gold', '/gold'],
+  ['黄金', '/gold'],
+  ['oro', '/gold'],
+  ['saatler', '/watches'],
+  ['watches', '/watches'],
+  ['腕表', '/watches'],
+  ['relojes', '/watches'],
+  ['çantalar & aksesuarlar', '/bags'],
+  ['bags & accessories', '/bags'],
+  ['皮具与配件', '/bags'],
+  ['bolsos y accesorios', '/bags'],
+  ['anasayfa', '/'],
+  ['home', '/'],
+  ['首页', '/'],
+  ['inicio', '/'],
+])
+
 const getMobileCategory = (button) => {
   const categoryButtons = Array.from(
     document.querySelectorAll('.mobile-category-next')
@@ -221,28 +241,29 @@ const navigateToMobileCategory = (event) => {
   )
 }
 
-const navigateToMobileZultanite = (event) => {
+const navigateToDirectMobileSection = (event) => {
   const button = event.target.closest?.('.mobile-drawer-link')
   if (!button) return false
 
   const label = button.querySelector('span')?.textContent?.trim().toLowerCase()
-  if (label !== 'zultanite') return false
+  const targetUrl = directMobileRoutes.get(label)
+  if (!targetUrl) return false
 
   event.preventDefault()
   event.stopPropagation()
   event.stopImmediatePropagation?.()
 
-  return closeMobileDrawerThenNavigate(button, '/jewellery?stone=zultanite')
+  return closeMobileDrawerThenNavigate(button, targetUrl)
 }
 
 document.addEventListener('pointerup', navigateToMobileCategory, true)
-document.addEventListener('pointerup', navigateToMobileZultanite, true)
+document.addEventListener('pointerup', navigateToDirectMobileSection, true)
 
 document.addEventListener(
   'click',
   (event) => {
     if (navigateToMobileCategory(event)) return
-    if (navigateToMobileZultanite(event)) return
+    if (navigateToDirectMobileSection(event)) return
 
     const target = event.target instanceof Element ? event.target : null
     if (!target) return
