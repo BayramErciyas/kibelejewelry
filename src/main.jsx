@@ -182,21 +182,12 @@ const navigateWithoutReload = (targetUrl) => {
 
 let mobileNavigationTimer = null
 
-const navigateToMobileCategory = (event) => {
-  const button = event.target.closest?.('.mobile-category-next')
-  if (!button) return false
-
-  const category = getMobileCategory(button)
-  if (!category) return false
-
-  event.preventDefault()
-  event.stopPropagation()
-  event.stopImmediatePropagation?.()
+const closeMobileDrawerThenNavigate = (button, targetUrl) => {
+  if (!(button instanceof HTMLElement)) return false
 
   button.blur()
   blurMobileFocus()
 
-  const targetUrl = `/jewellery?category=${encodeURIComponent(category)}`
   const drawer = button.closest('.mobile-navigation-drawer')
   const overlay = document.querySelector('.mobile-drawer-overlay')
 
@@ -213,12 +204,45 @@ const navigateToMobileCategory = (event) => {
   return true
 }
 
+const navigateToMobileCategory = (event) => {
+  const button = event.target.closest?.('.mobile-category-next')
+  if (!button) return false
+
+  const category = getMobileCategory(button)
+  if (!category) return false
+
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
+
+  return closeMobileDrawerThenNavigate(
+    button,
+    `/jewellery?category=${encodeURIComponent(category)}`
+  )
+}
+
+const navigateToMobileZultanite = (event) => {
+  const button = event.target.closest?.('.mobile-drawer-link')
+  if (!button) return false
+
+  const label = button.querySelector('span')?.textContent?.trim().toLowerCase()
+  if (label !== 'zultanite') return false
+
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
+
+  return closeMobileDrawerThenNavigate(button, '/jewellery?stone=zultanite')
+}
+
 document.addEventListener('pointerup', navigateToMobileCategory, true)
+document.addEventListener('pointerup', navigateToMobileZultanite, true)
 
 document.addEventListener(
   'click',
   (event) => {
     if (navigateToMobileCategory(event)) return
+    if (navigateToMobileZultanite(event)) return
 
     const target = event.target instanceof Element ? event.target : null
     if (!target) return
