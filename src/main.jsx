@@ -26,6 +26,14 @@ const blurMobileFocus = () => {
   }
 }
 
+const navigateWithoutReload = (targetUrl) => {
+  const currentUrl = `${window.location.pathname}${window.location.search}`
+  if (currentUrl === targetUrl) return
+
+  window.history.pushState({}, '', targetUrl)
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
 const navigateToMobileCategory = (event) => {
   const button = event.target.closest?.('.mobile-category-next')
   if (!button) return false
@@ -42,10 +50,9 @@ const navigateToMobileCategory = (event) => {
 
   const targetUrl = `/jewellery?category=${encodeURIComponent(category)}`
 
-  // Pointer/touch olayinda React'in alt-menu state degisikligini beklemeden
-  // dogrudan kategori sayfasina git. Boylece mobilde "geri donme" hissi
-  // yaratan ucuncu seviye menu tamamen atlanir.
-  window.location.href = targetUrl
+  // Tam sayfa yenilemeden React Router icinde kategoriye gec.
+  // Boylece mobildeki sert beyaz ekran / yeniden yukleme hissi kalkar.
+  navigateWithoutReload(targetUrl)
   return true
 }
 
