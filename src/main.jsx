@@ -136,6 +136,13 @@ const mobileNaturalStoneRoutes = [
   'emerald',
 ]
 
+const cappadociaMenuLabels = new Set([
+  'kapadokya serisi',
+  'cappadocia series',
+  '卡帕多奇亚系列',
+  'serie capadocia',
+])
+
 const directMobileRoutes = new Map([
   ['zultanite', '/jewellery?stone=zultanite'],
   ['altın', '/gold'],
@@ -280,6 +287,39 @@ const navigateToMobileNaturalStone = (event) => {
   return closeMobileDrawerThenNavigate(button, targetUrl)
 }
 
+const navigateToMobileCappadocia = (event) => {
+  const button = event.target.closest?.('.mobile-submenu-link')
+  if (!button) return false
+
+  const group = button.closest('.mobile-drawer-group')
+  if (!group) return false
+
+  const triggerLabel = group
+    .querySelector('.mobile-drawer-trigger span')
+    ?.textContent?.trim().toLowerCase()
+
+  if (!cappadociaMenuLabels.has(triggerLabel)) return false
+
+  const optionButtons = Array.from(
+    group.querySelectorAll('.mobile-drawer-submenu .mobile-submenu-link')
+  )
+  const optionIndex = optionButtons.indexOf(button)
+
+  const targetUrl = [
+    '/jewellery?series=balloon',
+    '/jewellery?series=nazar',
+    '/jewellery?series=cappadocia',
+  ][optionIndex]
+
+  if (!targetUrl) return false
+
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
+
+  return closeMobileDrawerThenNavigate(button, targetUrl)
+}
+
 const navigateToDirectMobileSection = (event) => {
   const button = event.target.closest?.('.mobile-drawer-link')
   if (!button) return false
@@ -297,6 +337,7 @@ const navigateToDirectMobileSection = (event) => {
 
 document.addEventListener('pointerup', navigateToMobileCategory, true)
 document.addEventListener('pointerup', navigateToMobileNaturalStone, true)
+document.addEventListener('pointerup', navigateToMobileCappadocia, true)
 document.addEventListener('pointerup', navigateToDirectMobileSection, true)
 
 document.addEventListener(
@@ -304,6 +345,7 @@ document.addEventListener(
   (event) => {
     if (navigateToMobileCategory(event)) return
     if (navigateToMobileNaturalStone(event)) return
+    if (navigateToMobileCappadocia(event)) return
     if (navigateToDirectMobileSection(event)) return
 
     const target = event.target instanceof Element ? event.target : null
