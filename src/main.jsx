@@ -142,6 +142,47 @@ const blurMobileFocus = () => {
   }
 }
 
+const preparePanelForHide = (panel) => {
+  if (!(panel instanceof HTMLElement)) return
+
+  if (panel.contains(document.activeElement)) {
+    const activeElement = document.activeElement
+    if (activeElement instanceof HTMLElement) activeElement.blur()
+  }
+
+  panel.setAttribute('inert', '')
+}
+
+const prepareMobilePanelsBeforeInteraction = (event) => {
+  const target = event.target instanceof Element ? event.target : null
+  if (!target) return
+
+  const drawer = document.querySelector('.mobile-navigation-drawer')
+  const searchPanel = document.querySelector('.mobile-search-panel')
+  const overlay = target.closest('.mobile-drawer-overlay')
+
+  const drawerCloseOrNavigate = target.closest(
+    '.mobile-navigation-drawer a, .mobile-navigation-drawer button, .mobile-submenu-link, .mobile-category-next'
+  )
+  const searchCloseOrNavigate = target.closest(
+    '.mobile-search-panel a, .mobile-search-panel button'
+  )
+
+  if (overlay || drawerCloseOrNavigate) {
+    if (drawer instanceof HTMLElement && drawer.classList.contains('open')) {
+      preparePanelForHide(drawer)
+    }
+  }
+
+  if (searchCloseOrNavigate) {
+    if (searchPanel instanceof HTMLElement && searchPanel.classList.contains('open')) {
+      preparePanelForHide(searchPanel)
+    }
+  }
+}
+
+document.addEventListener('pointerdown', prepareMobilePanelsBeforeInteraction, true)
+
 const navigateWithoutReload = (targetUrl) => {
   const currentUrl = `${window.location.pathname}${window.location.search}`
   if (currentUrl === targetUrl) return
@@ -170,6 +211,7 @@ const navigateToMobileCategory = (event) => {
   const drawer = button.closest('.mobile-navigation-drawer')
   const overlay = document.querySelector('.mobile-drawer-overlay')
 
+  preparePanelForHide(drawer)
   drawer?.classList.remove('open')
   overlay?.classList.remove('open')
 
@@ -190,14 +232,13 @@ document.addEventListener(
   (event) => {
     if (navigateToMobileCategory(event)) return
 
-    const button = event.target.closest?.('button')
-    if (!button) return
+    const target = event.target instanceof Element ? event.target : null
+    if (!target) return
 
     if (
-      button.closest('.mobile-navigation-drawer, .mobile-search-panel') &&
-      document.activeElement instanceof HTMLElement
+      target.closest('.mobile-navigation-drawer, .mobile-search-panel, .mobile-drawer-overlay')
     ) {
-      document.activeElement.blur()
+      blurMobileFocus()
     }
   },
   true
@@ -210,8 +251,7 @@ const syncMobilePanelAccessibility = () => {
       const isHidden = panel.getAttribute('aria-hidden') === 'true'
 
       if (isHidden) {
-        if (panel.contains(document.activeElement)) blurMobileFocus()
-        panel.setAttribute('inert', '')
+        preparePanelForHide(panel)
       } else {
         panel.removeAttribute('inert')
       }
