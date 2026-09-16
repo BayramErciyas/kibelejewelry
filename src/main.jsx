@@ -1,11 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './performanceOptimizer.js'
 import App from './App.jsx'
 import { Analytics } from '@vercel/analytics/react'
 
-const SWAROVSKI_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)'
-const MOBILE_TRANSITION_MS = 380
+const SWAROVSKI_EASE = 'cubic-bezier(0.16, 1, 0.3, 1)'
+const MOBILE_TRANSITION_MS = 560
+const MOBILE_ROUTE_DELAY_MS = 500
 
 const transitionStyle = document.createElement('style')
 transitionStyle.textContent = `
@@ -13,58 +15,69 @@ transitionStyle.textContent = `
   .mobile-navigation-drawer {
     transform: translate3d(-100%, 0, 0) !important;
     opacity: 1;
-    transition: transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE} !important;
-    will-change: transform;
+    transition:
+      transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE},
+      opacity 320ms ease !important;
+    will-change: transform, opacity;
   }
 
   .mobile-navigation-drawer.open {
     transform: translate3d(0, 0, 0) !important;
+    opacity: 1;
   }
 
   .mobile-drawer-overlay {
     opacity: 0 !important;
     visibility: hidden;
     transition:
-      opacity 300ms ease,
-      visibility 0s linear 300ms !important;
+      opacity 420ms ease,
+      visibility 0s linear 420ms !important;
   }
 
   .mobile-drawer-overlay.open {
     opacity: 1 !important;
     visibility: visible;
     transition:
-      opacity 300ms ease,
+      opacity 420ms ease,
       visibility 0s linear 0s !important;
   }
 
   .mobile-drawer-submenu {
-    transform: translate3d(100%, 0, 0) !important;
-    opacity: 1;
-    transition: transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE} !important;
-    will-change: transform;
+    transform: translate3d(92%, 0, 0) !important;
+    opacity: 0.72;
+    transition:
+      transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE},
+      opacity 420ms ease !important;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
   .mobile-drawer-group.open > .mobile-drawer-submenu {
     transform: translate3d(0, 0, 0) !important;
+    opacity: 1;
   }
 
   .mobile-category-page {
-    transform: translate3d(100%, 0, 0) !important;
-    opacity: 1 !important;
-    transition: transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE} !important;
-    will-change: transform;
+    transform: translate3d(92%, 0, 0) !important;
+    opacity: 0.72 !important;
+    transition:
+      transform ${MOBILE_TRANSITION_MS}ms ${SWAROVSKI_EASE},
+      opacity 420ms ease !important;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
   }
 
   .mobile-category-page.open {
     transform: translate3d(0, 0, 0) !important;
+    opacity: 1 !important;
   }
 
   .mobile-search-panel {
     transform: translate3d(0, -16px, 0);
     opacity: 0;
     transition:
-      transform 320ms ${SWAROVSKI_EASE},
-      opacity 240ms ease !important;
+      transform 420ms ${SWAROVSKI_EASE},
+      opacity 320ms ease !important;
     will-change: transform, opacity;
   }
 
@@ -78,16 +91,16 @@ transitionStyle.textContent = `
   .mobile-category-next,
   .mobile-submenu-link {
     transition:
-      opacity 180ms ease,
-      transform 180ms ease !important;
+      opacity 260ms ease,
+      transform 300ms ${SWAROVSKI_EASE} !important;
   }
 
   .mobile-drawer-link:active,
   .mobile-drawer-trigger:active,
   .mobile-category-next:active,
   .mobile-submenu-link:active {
-    opacity: .58;
-    transform: translate3d(2px, 0, 0);
+    opacity: .68;
+    transform: translate3d(1px, 0, 0) scale(.995);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -108,6 +121,47 @@ transitionStyle.textContent = `
 document.head.appendChild(transitionStyle)
 
 const mobileCategoryRoutes = ['rings', 'necklaces', 'earrings', 'bracelets', 'charms']
+const mobileNaturalStoneRoutes = [
+  'aquamarine',
+  'diaspore',
+  'diamond',
+  'opal',
+  'sapphire',
+  'citrine',
+  'tanzanite',
+  'topaz',
+  'tourmaline',
+  'ruby',
+  'zircon',
+  'emerald',
+]
+
+const cappadociaMenuLabels = new Set([
+  'kapadokya serisi',
+  'cappadocia series',
+  '卡帕多奇亚系列',
+  'serie capadocia',
+])
+
+const directMobileRoutes = new Map([
+  ['zultanite', '/jewellery?stone=zultanite'],
+  ['altın', '/gold'],
+  ['gold', '/gold'],
+  ['黄金', '/gold'],
+  ['oro', '/gold'],
+  ['saatler', '/watches'],
+  ['watches', '/watches'],
+  ['腕表', '/watches'],
+  ['relojes', '/watches'],
+  ['çantalar & aksesuarlar', '/bags'],
+  ['bags & accessories', '/bags'],
+  ['皮具与配件', '/bags'],
+  ['bolsos y accesorios', '/bags'],
+  ['anasayfa', '/'],
+  ['home', '/'],
+  ['首页', '/'],
+  ['inicio', '/'],
+])
 
 const getMobileCategory = (button) => {
   const categoryButtons = Array.from(
@@ -129,6 +183,36 @@ const blurMobileFocus = () => {
   }
 }
 
+const blurPanelFocus = (panel) => {
+  if (!(panel instanceof HTMLElement)) return
+
+  const activeElement = document.activeElement
+  if (activeElement instanceof HTMLElement && panel.contains(activeElement)) {
+    activeElement.blur()
+  }
+}
+
+const blurFocusBeforeMobileInteraction = (event) => {
+  const target = event.target instanceof Element ? event.target : null
+  if (!target) return
+
+  const drawer = document.querySelector('.mobile-navigation-drawer')
+  const searchPanel = document.querySelector('.mobile-search-panel')
+  const overlay = target.closest('.mobile-drawer-overlay')
+
+  const drawerAction = target.closest(
+    '.mobile-navigation-drawer a, .mobile-navigation-drawer button, .mobile-submenu-link, .mobile-category-next'
+  )
+  const searchAction = target.closest(
+    '.mobile-search-panel a, .mobile-search-panel button'
+  )
+
+  if (overlay || drawerAction) blurPanelFocus(drawer)
+  if (searchAction) blurPanelFocus(searchPanel)
+}
+
+document.addEventListener('pointerdown', blurFocusBeforeMobileInteraction, true)
+
 const navigateWithoutReload = (targetUrl) => {
   const currentUrl = `${window.location.pathname}${window.location.search}`
   if (currentUrl === targetUrl) return
@@ -138,6 +222,28 @@ const navigateWithoutReload = (targetUrl) => {
 }
 
 let mobileNavigationTimer = null
+
+const closeMobileDrawerThenNavigate = (button, targetUrl) => {
+  if (!(button instanceof HTMLElement)) return false
+
+  button.blur()
+  blurMobileFocus()
+
+  const drawer = button.closest('.mobile-navigation-drawer')
+  const overlay = document.querySelector('.mobile-drawer-overlay')
+
+  drawer?.classList.remove('open')
+  overlay?.classList.remove('open')
+
+  if (mobileNavigationTimer) window.clearTimeout(mobileNavigationTimer)
+
+  mobileNavigationTimer = window.setTimeout(() => {
+    navigateWithoutReload(targetUrl)
+    mobileNavigationTimer = null
+  }, MOBILE_ROUTE_DELAY_MS)
+
+  return true
+}
 
 const navigateToMobileCategory = (event) => {
   const button = event.target.closest?.('.mobile-category-next')
@@ -150,43 +256,105 @@ const navigateToMobileCategory = (event) => {
   event.stopPropagation()
   event.stopImmediatePropagation?.()
 
-  button.blur()
-  blurMobileFocus()
+  return closeMobileDrawerThenNavigate(
+    button,
+    `/jewellery?category=${encodeURIComponent(category)}`
+  )
+}
 
-  const targetUrl = `/jewellery?category=${encodeURIComponent(category)}`
-  const drawer = button.closest('.mobile-navigation-drawer')
-  const overlay = document.querySelector('.mobile-drawer-overlay')
+const navigateToMobileNaturalStone = (event) => {
+  const button = event.target.closest?.('.mobile-stones-submenu .mobile-submenu-link')
+  if (!button) return false
 
-  // Swarovski benzeri his: once drawer yumusakca kapanir,
-  // sonra React Router icinde sayfa yenilenmeden kategori degisir.
-  drawer?.classList.remove('open')
-  overlay?.classList.remove('open')
+  let targetUrl = '/jewellery?collection=natural-stones'
 
-  if (mobileNavigationTimer) window.clearTimeout(mobileNavigationTimer)
+  if (!button.classList.contains('mobile-view-all')) {
+    const stoneButtons = Array.from(
+      document.querySelectorAll(
+        '.mobile-stones-submenu .mobile-submenu-link:not(.mobile-view-all)'
+      )
+    )
+    const stoneIndex = stoneButtons.indexOf(button)
+    const stoneSlug = mobileNaturalStoneRoutes[stoneIndex]
+    if (!stoneSlug) return false
+    targetUrl = `/jewellery?stone=${encodeURIComponent(stoneSlug)}`
+  }
 
-  mobileNavigationTimer = window.setTimeout(() => {
-    navigateWithoutReload(targetUrl)
-    mobileNavigationTimer = null
-  }, 300)
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
 
-  return true
+  return closeMobileDrawerThenNavigate(button, targetUrl)
+}
+
+const navigateToMobileCappadocia = (event) => {
+  const button = event.target.closest?.('.mobile-submenu-link')
+  if (!button) return false
+
+  const group = button.closest('.mobile-drawer-group')
+  if (!group) return false
+
+  const triggerLabel = group
+    .querySelector('.mobile-drawer-trigger span')
+    ?.textContent?.trim().toLowerCase()
+
+  if (!cappadociaMenuLabels.has(triggerLabel)) return false
+
+  const optionButtons = Array.from(
+    group.querySelectorAll('.mobile-drawer-submenu .mobile-submenu-link')
+  )
+  const optionIndex = optionButtons.indexOf(button)
+
+  const targetUrl = [
+    '/jewellery?series=balloon',
+    '/jewellery?series=nazar',
+    '/jewellery?series=cappadocia',
+  ][optionIndex]
+
+  if (!targetUrl) return false
+
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
+
+  return closeMobileDrawerThenNavigate(button, targetUrl)
+}
+
+const navigateToDirectMobileSection = (event) => {
+  const button = event.target.closest?.('.mobile-drawer-link')
+  if (!button) return false
+
+  const label = button.querySelector('span')?.textContent?.trim().toLowerCase()
+  const targetUrl = directMobileRoutes.get(label)
+  if (!targetUrl) return false
+
+  event.preventDefault()
+  event.stopPropagation()
+  event.stopImmediatePropagation?.()
+
+  return closeMobileDrawerThenNavigate(button, targetUrl)
 }
 
 document.addEventListener('pointerup', navigateToMobileCategory, true)
+document.addEventListener('pointerup', navigateToMobileNaturalStone, true)
+document.addEventListener('pointerup', navigateToMobileCappadocia, true)
+document.addEventListener('pointerup', navigateToDirectMobileSection, true)
 
 document.addEventListener(
   'click',
   (event) => {
     if (navigateToMobileCategory(event)) return
+    if (navigateToMobileNaturalStone(event)) return
+    if (navigateToMobileCappadocia(event)) return
+    if (navigateToDirectMobileSection(event)) return
 
-    const button = event.target.closest?.('button')
-    if (!button) return
+    const target = event.target instanceof Element ? event.target : null
+    if (!target) return
 
     if (
-      button.closest('.mobile-navigation-drawer, .mobile-search-panel') &&
-      document.activeElement instanceof HTMLElement
+      target.closest('.mobile-navigation-drawer, .mobile-search-panel, .mobile-drawer-overlay')
     ) {
-      document.activeElement.blur()
+      blurMobileFocus()
     }
   },
   true
@@ -199,7 +367,7 @@ const syncMobilePanelAccessibility = () => {
       const isHidden = panel.getAttribute('aria-hidden') === 'true'
 
       if (isHidden) {
-        if (panel.contains(document.activeElement)) blurMobileFocus()
+        blurPanelFocus(panel)
         panel.setAttribute('inert', '')
       } else {
         panel.removeAttribute('inert')
