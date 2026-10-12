@@ -1,4 +1,5 @@
 import heroVideo from "./videos/zultanite.mp4";
+import PremiumHomepage from "./PremiumHomepage";
 import React, { useState, createContext, useContext, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import AdminLogin from "./AdminLogin";
@@ -1876,6 +1877,7 @@ function App() {
           <main>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/premium-preview" element={<PremiumHomepage />} />
               <Route path="/search" element={<SearchResults />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/account" element={<Account />} />
