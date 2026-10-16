@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+
+# Local browser test output
+/test-results/
+/playwright-report/
