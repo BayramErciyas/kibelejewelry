@@ -5,6 +5,7 @@ import AdminLogin from "./AdminLogin";
 import AdminDashboard from "./AdminDashboard";
 import ResetPassword from "./ResetPassword";
 import Account from "./Account";
+import SafeCart from "./Cart";
 import { supabase } from './supabaseClient';
 // Görsel Importları
 import zultanitering from './zultanitering.jpg'; 
@@ -76,9 +77,8 @@ const translations = {
     watchCollections: "Watch Collections", swissMade: "Swiss Made", automatic: "Automatic",
     leatherBags: "Leather Bags", scarves: "Silk Scarves", smallLeather: "Small Leather Goods", accessoriesTitle: "Accessories",
     contactUs: "Contact Us", followUs: "FOLLOW US", customerCare: "CUSTOMER CARE",
-    yourBag: "YOUR SHOPPING BAG", emptyBag: "YOUR BAG IS CURRENTLY EMPTY.", total: "TOTAL", checkout: "PROCEED TO CHECKOUT",
+    yourBag: "YOUR SHOPPING BAG", emptyBag: "YOUR BAG IS CURRENTLY EMPTY.", total: "TOTAL", checkout: "PREPARE ORDER REQUEST",
     remove: "REMOVE", continueShopping: "CONTINUE SHOPPING", addedMsg: "ADDED TO BAG",
-    payNow: "COMPLETE PAYMENT", successMsg: "Payment Successful!"
   },
   TR: {
     findStore: "Mağaza Bul", services: "Hizmetler", cart: "Sepetim", account: "Hesabım",
@@ -91,9 +91,8 @@ const translations = {
     watchCollections: "Saat Koleksiyonları", swissMade: "İsviçre Yapımı", automatic: "Otomatik",
     leatherBags: "Deri Çantalar", scarves: "İpek Eşarplar", smallLeather: "Küçük Deri Eşyalar", accessoriesTitle: "Aksesuarlar",
     contactUs: "İletişim", followUs: "TAKİP EDİN", customerCare: "MÜŞTERİ HİZMETLERİ",
-    yourBag: "ALIŞVERİŞ SEPETİNİZ", emptyBag: "SEPETİNİZ ŞU ANDA BOŞ.", total: "TOPLAM", checkout: "ÖDEMEYE GEÇ",
+    yourBag: "ALIŞVERİŞ SEPETİNİZ", emptyBag: "SEPETİNİZ ŞU ANDA BOŞ.", total: "TOPLAM", checkout: "SİPARİŞ TALEBİ HAZIRLA",
     remove: "SİL", continueShopping: "ALIŞVERİŞE DEVAM ET", addedMsg: "SEPETE EKLENDİ",
-    payNow: "ÖDEMEYİ TAMAMLA", successMsg: "Ödeme Başarıyla Tamamlandı!"
   },
   ZH: {
     findStore: "查找店铺", services: "服务", cart: "购物篮", account: "我的账户",
@@ -106,9 +105,8 @@ const translations = {
     watchCollections: "腕表系列", swissMade: "瑞士制造", automatic: "全自动",
     leatherBags: "皮手提包", scarves: "丝巾", smallLeather: "小皮件", accessoriesTitle: "配件",
     contactUs: "联系我们", followUs: "关注我们", customerCare: "客户服务",
-    yourBag: "购物篮", emptyBag: "您的购物篮是空的", total: "总计", checkout: "去结账",
+    yourBag: "购物篮", emptyBag: "您的购物篮是空的", total: "总计", checkout: "准备订单咨询",
     remove: "移除", continueShopping: "继续购物", addedMsg: "已加入购物篮",
-    payNow: "完成支付", successMsg: "支付成功"
   },
   ES: {
     findStore: "Buscar una tienda", services: "Servicios", cart: "Bolsa de compra", account: "Mi cuenta",
@@ -121,9 +119,8 @@ const translations = {
     watchCollections: "Colecciones de relojes", swissMade: "Hecho en Suiza", automatic: "Automático",
     leatherBags: "Bolsos de cuero", scarves: "Pañuelos de seda", smallLeather: "Pequeños artículos de cuero", accessoriesTitle: "Accesorios",
     contactUs: "Contacto", followUs: "SÍGUENOS", customerCare: "ATENCIÓN AL CLIENTE",
-    yourBag: "TU BOLSA DE COMPRA", emptyBag: "TU BOLSA ESTÁ VACÍA.", total: "TOTAL", checkout: "CONTINUAR AL PAGO",
+    yourBag: "TU BOLSA DE COMPRA", emptyBag: "TU BOLSA ESTÁ VACÍA.", total: "TOTAL", checkout: "PREPARAR SOLICITUD DE PEDIDO",
     remove: "ELIMINAR", continueShopping: "SEGUIR COMPRANDO", addedMsg: "AÑADIDO A LA BOLSA",
-    payNow: "COMPLETAR EL PAGO", successMsg: "¡Pago realizado correctamente!"
   }
 };  
 
@@ -217,104 +214,8 @@ const naturalStoneMenuCopy = {
   ],
 };
 
-// SEPET SAYFASI BİLEŞENİ
-const Cart = () => {
-  const { t, cart, removeFromCart, setCart, formatPrice } = useContext(LanguageContext);
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const navigate = useNavigate();
-  
-  const totalPrice = cart.reduce(
-    (acc, item) => acc + Number(item.price || 0),
-    0
-  );
-
-  const handlePayment = (e) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    setTimeout(() => {
-      alert(t.successMsg);
-      setCart([]); // Sepeti boşalt
-      setIsProcessing(false);
-      navigate('/'); // Ana sayfaya dön
-    }, 2000);
-  };
-
-  return (
-    <div className="cart-page-container">
-      <div className="section-title">
-        <h2>{showCheckout ? t.checkout : t.yourBag}</h2>
-        <div className="title-line"></div>
-      </div>
-
-      <div className="cart-content-wrapper">
-        {cart.length > 0 ? (
-          <div className="cart-layout">
-            <div className="cart-items-column">
-              {!showCheckout ? (
-                cart.map((item, index) => (
-                  <div key={`${item.id}-${index}`} className="cart-item-card">
-                    <div className="cart-img-wrapper">
-                      <img src={item.img} alt={item.name || item.title} />
-                    </div>
-                    <div className="cart-item-details">
-                      <div className="details-header">
-                        <h3>{item.name || item.title}</h3>
-                        <p className="item-price">{formatPrice(item.price)}</p>
-                      </div>
-                      <button className="cart-remove-btn" onClick={() => removeFromCart(index)}>
-                        {t.remove}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="checkout-form-container" style={{padding: '20px', background: '#fcfcfc'}}>
-                  <form id="pay-form" onSubmit={handlePayment}>
-                    <input type="text" placeholder="Full Name" required style={{width: '100%', padding: '12px', marginBottom: '10px', border: '1px solid #eee'}} />
-                    <input type="text" placeholder="Card Number" maxLength="16" required style={{width: '100%', padding: '12px', marginBottom: '10px', border: '1px solid #eee'}} />
-                    <div style={{display: 'flex', gap: '10px'}}>
-                      <input type="text" placeholder="MM/YY" required style={{flex: 1, padding: '12px', border: '1px solid #eee'}} />
-                      <input type="text" placeholder="CVV" maxLength="3" required style={{flex: 1, padding: '12px', border: '1px solid #eee'}} />
-                    </div>
-                  </form>
-                </div>
-              )}
-            </div>
-
-            <div className="cart-summary-column">
-              <div className="summary-sticky">
-                <div className="summary-row">
-                  <span>{t.total}</span>
-                  <span className="total-amount">{formatPrice(totalPrice)}</span>
-                </div>
-                {!showCheckout ? (
-                  <button className="checkout-cta" onClick={() => setShowCheckout(true)}>{t.checkout}</button>
-                ) : (
-                  <button type="submit" form="pay-form" className="checkout-cta" disabled={isProcessing}>
-                    {isProcessing ? "..." : t.payNow}
-                  </button>
-                )}
-                <button 
-                  onClick={() => showCheckout ? setShowCheckout(false) : navigate('/')} 
-                  className="continue-link" 
-                  style={{background: 'none', border: 'none', cursor: 'pointer', width: '100%'}}
-                >
-                  {showCheckout ? "BACK" : t.continueShopping}
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="empty-state-lux">
-            <p>{t.emptyBag}</p>
-            <Link to="/" className="explore-btn-simple">{t.continueShopping}</Link>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+// Both cart entry points share the same card-free order-request flow.
+const Cart = () => <SafeCart {...useContext(LanguageContext)} />;
 
 const SearchResults = () => {
   const { t, lang, formatPrice } = useContext(LanguageContext);
@@ -1836,7 +1737,7 @@ function App() {
     })} TL`;
   };
   
-  // setCart value içerisine eklendi ki Cart bileşeni sepeti boşaltabilsin
+  // Existing cart actions remain available to store components.
   const value = {
     lang,
     setLang,
@@ -2181,40 +2082,6 @@ function App() {
             to { transform: translateX(0); opacity: 1; }
           }
           
-          /* CART PAGE SPECIFIC */
-          .cart-page-container { padding: 40px; min-height: 60vh; }
-          .cart-content-wrapper { max-width: 1400px; margin: 0 auto; width: 100%; }
-          .cart-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 100px; }
-          
-          .cart-item-card { display: flex; gap: 30px; padding: 30px 0; border-bottom: 1px solid #eee; }
-          .cart-img-wrapper { width: 140px; aspect-ratio: 3/4; overflow: hidden; background: #f9f9f9; }
-          .cart-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-          
-          .cart-item-details { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-          .details-header h3 { font-size: 14px; letter-spacing: 1px; font-weight: 400; margin: 0 0 10px 0; }
-          .item-price { font-size: 13px; color: #555; }
-          .cart-remove-btn { 
-             background: none; border: none; padding: 0; cursor: pointer; 
-             font-size: 10px; letter-spacing: 1px; text-decoration: underline; width: fit-content;
-             opacity: 0.5; transition: opacity 0.3s;
-          }
-          .cart-remove-btn:hover { opacity: 1; }
-
-          .summary-sticky { position: sticky; top: 220px; background: #fcfcfc; padding: 40px; border: 1px solid #f5f5f5; }
-          .summary-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-          .summary-row span { font-size: 12px; letter-spacing: 2px; font-weight: 600; }
-          .total-amount { font-size: 16px !important; }
-          
-          .checkout-cta { 
-            width: 100%; background: #000; color: #fff !important; border: none; padding: 18px;
-            font-size: 11px; letter-spacing: 3px; cursor: pointer; transition: opacity 0.3s;
-          }
-          .checkout-cta:hover { opacity: 0.8; }
-          .continue-link { 
-            display: block; text-align: center; margin-top: 20px; font-size: 10px; 
-            letter-spacing: 1px; text-decoration: none; opacity: 0.6;
-          }
-
           .empty-state-lux { text-align: center; padding: 100px 0; }
           .explore-btn-simple { 
             display: inline-block; margin-top: 30px; padding: 12px 30px; border: 1px solid #000;
@@ -4223,4 +4090,4 @@ function App() {
   );
 }
 
-export default App; 
+export default App;
